@@ -1,4 +1,4 @@
-// Auth
+// 인증
 export interface LoginRequest {
   email: string;
   password: string;
@@ -16,7 +16,7 @@ export interface TokenResponse {
   refreshToken: string | null;
 }
 
-// User
+// 사용자
 export interface UserResponse {
   name: string;
   email: string;
@@ -34,7 +34,7 @@ export interface PasswordUpdateRequest {
   password: string;
 }
 
-// Room
+// 채팅방
 export enum RoomType {
   DIRECT = 'DIRECT',
   GROUP = 'GROUP',
@@ -53,7 +53,7 @@ export interface RoomResponse {
   memberCount: number;
 }
 
-// Message
+// 메시지
 export interface ChatMessageRequest {
   content: string;
 }
@@ -65,7 +65,7 @@ export interface MessageResponse {
   createdAt: string;
 }
 
-// Chat (WebSocket)
+// 채팅 (WebSocket)
 export interface ChatMessage {
   roomId: number;
   message: MessageResponse;

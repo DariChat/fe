@@ -45,10 +45,10 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
         profileImageUrl: formData.profileImageUrl || null,
       });
       onUpdate(updated);
-      setSuccess('Profile updated successfully!');
+      setSuccess('프로필이 저장되었습니다!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update profile');
+      setError(err.response?.data?.message || '프로필 저장에 실패했습니다');
     } finally {
       setIsLoading(false);
     }
@@ -60,12 +60,12 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
     setSuccess('');
 
     if (passwordData.password !== passwordData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('비밀번호가 일치하지 않습니다');
       return;
     }
 
     if (passwordData.password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError('비밀번호는 8자 이상이어야 합니다');
       return;
     }
 
@@ -76,10 +76,10 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
         password: passwordData.password,
       });
       setPasswordData({ password: '', confirmPassword: '' });
-      setSuccess('Password updated successfully!');
+      setSuccess('비밀번호가 변경되었습니다!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update password');
+      setError(err.response?.data?.message || '비밀번호 변경에 실패했습니다');
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +88,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        {/* Profile Header */}
+        {/* 프로필 헤더 */}
         <div className="bg-gradient-to-r from-indigo-600 to-cyan-600 px-6 py-8">
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center text-2xl font-bold text-indigo-600">
@@ -101,7 +101,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* 탭 */}
         <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('profile')}
@@ -111,7 +111,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            Profile
+            프로필
           </button>
           <button
             onClick={() => setActiveTab('password')}
@@ -121,7 +121,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            Security
+            보안
           </button>
         </div>
 
@@ -142,7 +142,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nickname
+                  닉네임
                 </label>
                 <input
                   type="text"
@@ -156,7 +156,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Profile Image URL
+                  프로필 이미지 URL
                 </label>
                 <input
                   type="url"
@@ -167,7 +167,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Enter a URL to an image file
+                  이미지 파일의 주소를 입력하세요
                 </p>
               </div>
 
@@ -176,7 +176,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                 disabled={isLoading}
                 className="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Updating...' : 'Update Profile'}
+                {isLoading ? '저장 중...' : '프로필 저장'}
               </button>
             </form>
           )}
@@ -185,7 +185,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  New Password
+                  새 비밀번호
                 </label>
                 <input
                   type="password"
@@ -197,13 +197,13 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Minimum 8 characters
+                  최소 8자 이상
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm Password
+                  비밀번호 확인
                 </label>
                 <input
                   type="password"
@@ -221,7 +221,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                 disabled={isLoading}
                 className="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Updating...' : 'Update Password'}
+                {isLoading ? '변경 중...' : '비밀번호 변경'}
               </button>
             </form>
           )}

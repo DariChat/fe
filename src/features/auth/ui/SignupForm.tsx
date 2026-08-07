@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { authService } from '../service/authService';
 
@@ -27,7 +28,7 @@ export function SignupForm() {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('비밀번호가 일치하지 않습니다');
       return;
     }
 
@@ -42,7 +43,7 @@ export function SignupForm() {
       });
       router.push('/auth/login');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Signup failed. Please try again.');
+      setError(err.response?.data?.message || '회원가입에 실패했습니다. 다시 시도해 주세요.');
     } finally {
       setIsLoading(false);
     }
@@ -52,10 +53,18 @@ export function SignupForm() {
     <div className="w-full max-w-md">
       <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
         <div className="space-y-2 text-center">
+          <Image
+            src="/logo.png"
+            alt=""
+            width={72}
+            height={72}
+            className="mx-auto"
+            priority
+          />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
             Talkieee
           </h1>
-          <p className="text-gray-600 text-sm">Create your account</p>
+          <p className="text-gray-600 text-sm">계정을 만들고 대화를 시작하세요</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,7 +76,7 @@ export function SignupForm() {
 
           <div className="space-y-2">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Full Name
+              이름
             </label>
             <input
               id="name"
@@ -75,7 +84,7 @@ export function SignupForm() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="John Doe"
+              placeholder="홍길동"
               required
               maxLength={100}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
@@ -84,7 +93,7 @@ export function SignupForm() {
 
           <div className="space-y-2">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email
+              이메일
             </label>
             <input
               id="email"
@@ -101,7 +110,7 @@ export function SignupForm() {
 
           <div className="space-y-2">
             <label htmlFor="nickname" className="block text-sm font-medium text-gray-700">
-              Nickname
+              닉네임
             </label>
             <input
               id="nickname"
@@ -109,7 +118,7 @@ export function SignupForm() {
               name="nickname"
               value={formData.nickname}
               onChange={handleChange}
-              placeholder="Your nickname"
+              placeholder="사용할 닉네임"
               required
               maxLength={20}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
@@ -118,7 +127,7 @@ export function SignupForm() {
 
           <div className="space-y-2">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
+              비밀번호
             </label>
             <input
               id="password"
@@ -135,7 +144,7 @@ export function SignupForm() {
 
           <div className="space-y-2">
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-              Confirm Password
+              비밀번호 확인
             </label>
             <input
               id="confirmPassword"
@@ -155,7 +164,7 @@ export function SignupForm() {
             disabled={isLoading}
             className="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {isLoading ? '가입 중...' : '회원가입'}
           </button>
         </form>
 
@@ -164,7 +173,7 @@ export function SignupForm() {
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Already have an account?</span>
+            <span className="px-2 bg-white text-gray-500">이미 계정이 있으신가요?</span>
           </div>
         </div>
 
@@ -172,7 +181,7 @@ export function SignupForm() {
           href="/auth/login"
           className="block w-full py-3 border-2 border-indigo-600 text-indigo-600 font-semibold text-center rounded-lg hover:bg-indigo-50 transition"
         >
-          Sign In
+          로그인
         </Link>
       </div>
     </div>

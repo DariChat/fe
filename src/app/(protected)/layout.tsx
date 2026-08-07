@@ -6,13 +6,13 @@ import { Header } from '@/shared/ui/Header';
 import { Sidebar } from '@/shared/ui/Sidebar';
 import { userService } from '@/features/users/service/userService';
 
-export default function MainLayout({
+export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [userNickname, setUserNickname] = useState('User');
+  const [userNickname, setUserNickname] = useState('사용자');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -27,8 +27,7 @@ export default function MainLayout({
         const user = await userService.getProfile();
         setUserNickname(user.nickname);
       } catch (error) {
-        console.error('Failed to fetch user profile:', error);
-        router.push('/auth/login');
+        console.error('사용자 프로필을 불러오지 못했습니다:', error);
       } finally {
         setIsLoading(false);
       }
@@ -42,7 +41,7 @@ export default function MainLayout({
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">불러오는 중...</p>
         </div>
       </div>
     );

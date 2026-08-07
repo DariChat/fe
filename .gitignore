@@ -29,6 +29,10 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
 # IDE
 .vscode
 .idea
@@ -39,3 +43,7 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# 개인 작업 메모 (커밋 안 함)
+WORK_NOTES.md
+.vercel

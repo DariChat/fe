@@ -7,7 +7,7 @@ interface MessageItemProps {
 
 export function MessageItem({ message, isOwn }: MessageItemProps) {
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
+    return new Date(timestamp).toLocaleTimeString('ko-KR', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,

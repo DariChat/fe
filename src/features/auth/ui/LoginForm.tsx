@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { authService } from '../service/authService';
 
@@ -19,9 +20,9 @@ export function LoginForm() {
 
     try {
       await authService.login({ email, password });
-      router.push('/main/rooms');
+      router.push('/rooms');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      setError(err.response?.data?.message || '로그인에 실패했습니다. 다시 시도해 주세요.');
     } finally {
       setIsLoading(false);
     }
@@ -31,10 +32,18 @@ export function LoginForm() {
     <div className="w-full max-w-md">
       <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
         <div className="space-y-2 text-center">
+          <Image
+            src="/logo.png"
+            alt=""
+            width={72}
+            height={72}
+            className="mx-auto"
+            priority
+          />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
             Talkieee
           </h1>
-          <p className="text-gray-600 text-sm">Sign in to your account</p>
+          <p className="text-gray-600 text-sm">로그인하고 대화를 이어가세요</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -46,7 +55,7 @@ export function LoginForm() {
 
           <div className="space-y-2">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email
+              이메일
             </label>
             <input
               id="email"
@@ -61,7 +70,7 @@ export function LoginForm() {
 
           <div className="space-y-2">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
+              비밀번호
             </label>
             <input
               id="password"
@@ -80,7 +89,7 @@ export function LoginForm() {
             disabled={isLoading}
             className="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? '로그인 중...' : '로그인'}
           </button>
         </form>
 
@@ -89,7 +98,7 @@ export function LoginForm() {
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
+            <span className="px-2 bg-white text-gray-500">아직 계정이 없으신가요?</span>
           </div>
         </div>
 
@@ -97,7 +106,7 @@ export function LoginForm() {
           href="/auth/signup"
           className="block w-full py-3 border-2 border-indigo-600 text-indigo-600 font-semibold text-center rounded-lg hover:bg-indigo-50 transition"
         >
-          Create Account
+          회원가입
         </Link>
       </div>
     </div>

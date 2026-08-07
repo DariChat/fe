@@ -23,7 +23,7 @@ export function ChatInput({
       await onSendMessage(message.trim());
       setMessage('');
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('메시지 전송에 실패했습니다:', error);
     } finally {
       setIsSending(false);
     }
@@ -39,7 +39,7 @@ export function ChatInput({
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message..."
+          placeholder="메시지를 입력하세요..."
           disabled={isSending || isLoading}
           maxLength={500}
           className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition disabled:bg-gray-50"
@@ -52,18 +52,18 @@ export function ChatInput({
           {isSending ? (
             <>
               <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              Sending
+              전송 중
             </>
           ) : (
             <>
-              <span>Send</span>
+              <span>전송</span>
               <span>➤</span>
             </>
           )}
         </button>
       </div>
       <p className="text-xs text-gray-400 mt-2">
-        {message.length}/500 characters
+        {message.length}/500자
       </p>
     </form>
   );

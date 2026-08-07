@@ -16,7 +16,7 @@ export function RoomList() {
         const data = await roomService.getMyRooms();
         setRooms(data);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to load rooms');
+        setError(err.response?.data?.message || '채팅 목록을 불러오지 못했습니다');
       } finally {
         setIsLoading(false);
       }
@@ -30,7 +30,7 @@ export function RoomList() {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading chats...</p>
+          <p className="text-gray-600">채팅 목록을 불러오는 중...</p>
         </div>
       </div>
     );
@@ -45,7 +45,7 @@ export function RoomList() {
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
           >
-            Retry
+            다시 시도
           </button>
         </div>
       </div>
@@ -56,9 +56,9 @@ export function RoomList() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">No chats yet</p>
+          <p className="text-gray-600 mb-4">아직 채팅방이 없어요</p>
           <button className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all">
-            + Start a Chat
+            + 채팅 시작하기
           </button>
         </div>
       </div>
@@ -67,11 +67,11 @@ export function RoomList() {
 
   return (
     <div className="space-y-2 p-6">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Your Chats</h2>
+      <h2 className="text-xl font-bold text-gray-800 mb-4">내 채팅</h2>
       {rooms.map((room) => (
         <Link
           key={room.roomId}
-          href={`/main/chat/${room.roomId}`}
+          href={`/chat/${room.roomId}`}
           className="block p-4 bg-white rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/10 transition-all group"
         >
           <div className="flex items-center justify-between">
@@ -82,10 +82,10 @@ export function RoomList() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-800 group-hover:text-indigo-600 transition">
-                    {room.roomName || (room.roomType === RoomType.DIRECT ? 'Direct Message' : 'Group Chat')}
+                    {room.roomName || (room.roomType === RoomType.DIRECT ? '1:1 채팅' : '그룹 채팅')}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {room.memberCount} member{room.memberCount !== 1 ? 's' : ''}
+                    {room.memberCount}명 참여
                   </p>
                 </div>
               </div>

@@ -25,8 +25,7 @@ export default function ProfilePage() {
         const userData = await userService.getProfile();
         setUser(userData);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to load profile');
-        router.push('/auth/login');
+        setError(err.response?.data?.message || '프로필을 불러오지 못했습니다');
       } finally {
         setIsLoading(false);
       }
@@ -40,7 +39,7 @@ export default function ProfilePage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p>
+          <p className="text-gray-600">프로필을 불러오는 중...</p>
         </div>
       </div>
     );
@@ -50,12 +49,9 @@ export default function ProfilePage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Failed to load profile'}</p>
-          <Link
-            href="/main/rooms"
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-          >
-            Back to Chats
+          <p className="text-red-600 mb-4">{error || '프로필을 불러오지 못했습니다'}</p>
+          <Link href="/rooms" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+            채팅 목록으로
           </Link>
         </div>
       </div>
@@ -64,14 +60,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <ProfileForm
-        user={user}
-        onUpdate={(updated) => {
-          setUser(updated);
-          // Also update localStorage if needed
-          localStorage.setItem('userNickname', updated.nickname);
-        }}
-      />
+      <ProfileForm user={user} onUpdate={setUser} />
     </div>
   );
 }
