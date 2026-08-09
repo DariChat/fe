@@ -1,4 +1,4 @@
-import { chatService } from './chatService';
+import { chatService, toCursor } from './chatService';
 import { mockMessagesByRoom } from '@/shared/api/mockData';
 
 jest.mock('@/shared/api/client', () => ({
@@ -31,5 +31,19 @@ describe('chatService (mock 모드)', () => {
 
     expect(messages).toHaveLength(2);
     expect(messages).toEqual(mockMessagesByRoom[1].slice(-2));
+  });
+
+  it('toCursor 는 가장 오래된 메시지의 createdAt/id 를 커서로 만든다', async () => {
+    const messages = await chatService.getMessages(1);
+    const oldest = messages[0];
+
+    expect(toCursor(messages)).toEqual({
+      createdAt: oldest.createdAt,
+      id: oldest.id,
+    });
+  });
+
+  it('메시지가 없으면 커서를 만들지 않는다', () => {
+    expect(toCursor([])).toBeUndefined();
   });
 });

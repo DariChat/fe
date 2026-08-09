@@ -1,4 +1,4 @@
-import { apiClient } from '@/shared/api/client';
+import { apiClient, unwrap } from '@/shared/api/client';
 import {
   PasswordUpdateRequest,
   UserResponse,
@@ -13,13 +13,8 @@ export const userService = {
       return mockUser;
     }
 
-    try {
-      const response = await apiClient.get('/api/users/me');
-      return response.data;
-    } catch (error) {
-      console.warn('getProfile: API 호출 실패, mock 데이터로 대체합니다');
-      return mockUser;
-    }
+    const response = await apiClient.get('/api/users/me');
+    return unwrap<UserResponse>(response);
   },
 
   async updateProfile(data: UserUpdateRequest): Promise<UserResponse> {
@@ -27,13 +22,10 @@ export const userService = {
       return { ...mockUser, ...data };
     }
 
-    try {
-      const response = await apiClient.put('/api/users/update', data);
-      return response.data;
-    } catch (error) {
-      console.warn('updateProfile: API 호출 실패, mock 데이터로 대체합니다');
-      return { ...mockUser, ...data };
-    }
+    const response = await apiClient.put('/api/users/update', data);
+    const user = unwrap<UserResponse>(response);
+    localStorage.setItem('userNickname', user.nickname);
+    return user;
   },
 
   async updatePassword(data: PasswordUpdateRequest): Promise<UserResponse> {
@@ -41,12 +33,7 @@ export const userService = {
       return mockUser;
     }
 
-    try {
-      const response = await apiClient.put('/api/users/update/password', data);
-      return response.data;
-    } catch (error) {
-      console.warn('updatePassword: API 호출 실패, mock 데이터로 대체합니다');
-      return mockUser;
-    }
+    const response = await apiClient.put('/api/users/update/password', data);
+    return unwrap<UserResponse>(response);
   },
 };

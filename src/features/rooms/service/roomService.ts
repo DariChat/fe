@@ -1,5 +1,9 @@
-import { apiClient } from '@/shared/api/client';
-import { RoomCreateRequest, RoomResponse } from '@/shared/types/api.types';
+import { apiClient, unwrap } from '@/shared/api/client';
+import {
+  RoomCreateRequest,
+  RoomResponse,
+  RoomSummaryResponse,
+} from '@/shared/types/api.types';
 import { mockRooms } from '@/shared/api/mockData';
 import { USE_MOCK } from '@/shared/config/env';
 
@@ -16,27 +20,18 @@ export const roomService = {
       return buildMockRoom(data);
     }
 
-    try {
-      const response = await apiClient.post('/api/rooms', data);
-      return response.data;
-    } catch (error) {
-      console.warn('createRoom: API 호출 실패, mock 데이터로 대체합니다');
-      return buildMockRoom(data);
-    }
+    const response = await apiClient.post('/api/rooms', data);
+    return unwrap<RoomResponse>(response);
   },
 
-  async getMyRooms(): Promise<RoomResponse[]> {
+  /** 목록 응답은 RoomResponse 가 아니라 마지막 메시지/안읽은 수가 붙은 요약 DTO 다 */
+  async getMyRooms(): Promise<RoomSummaryResponse[]> {
     if (USE_MOCK) {
       return mockRooms;
     }
 
-    try {
-      const response = await apiClient.get('/api/rooms');
-      return response.data;
-    } catch (error) {
-      console.warn('getMyRooms: API 호출 실패, mock 데이터로 대체합니다');
-      return mockRooms;
-    }
+    const response = await apiClient.get('/api/rooms');
+    return unwrap<RoomSummaryResponse[]>(response);
   },
 
   async leaveRoom(roomId: number): Promise<void> {
@@ -44,10 +39,6 @@ export const roomService = {
       return;
     }
 
-    try {
-      await apiClient.delete(`/api/rooms/${roomId}/leave`);
-    } catch (error) {
-      console.warn('leaveRoom: API 호출 실패, mock 동작으로 대체합니다');
-    }
+    await apiClient.delete(`/api/rooms/${roomId}/leave`);
   },
 };

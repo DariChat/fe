@@ -1,4 +1,4 @@
-import { apiClient } from '@/shared/api/client';
+import { apiClient, unwrap } from '@/shared/api/client';
 import {
   LoginRequest,
   SignupRequest,
@@ -8,11 +8,9 @@ import {
 import { mockTokenResponse, mockUser } from '@/shared/api/mockData';
 import { USE_MOCK } from '@/shared/config/env';
 
+/** refreshToken 은 HttpOnly 쿠키로만 관리된다 (바디에는 null 이 온다) */
 const saveTokens = (data: TokenResponse) => {
   localStorage.setItem('accessToken', data.accessToken);
-  if (data.refreshToken) {
-    localStorage.setItem('refreshToken', data.refreshToken);
-  }
 };
 
 export const authService = {
@@ -26,13 +24,8 @@ export const authService = {
       };
     }
 
-    try {
-      const response = await apiClient.post('/api/auth/signup', data);
-      return response.data;
-    } catch (error) {
-      console.warn('signup: API 호출 실패, mock 데이터로 대체합니다');
-      return mockUser;
-    }
+    const response = await apiClient.post('/api/auth/signup', data);
+    return unwrap<UserResponse>(response);
   },
 
   async login(data: LoginRequest): Promise<TokenResponse> {
@@ -42,16 +35,15 @@ export const authService = {
       return mockTokenResponse;
     }
 
-    try {
-      const response = await apiClient.post('/api/auth/login', data);
-      saveTokens(response.data);
-      return response.data;
-    } catch (error) {
-      console.warn('login: API 호출 실패, mock 데이터로 대체합니다');
-      saveTokens(mockTokenResponse);
-      localStorage.setItem('userNickname', mockUser.nickname);
-      return mockTokenResponse;
-    }
+    const response = await apiClient.post('/api/auth/login', data);
+    const token = unwrap<TokenResponse>(response);
+    saveTokens(token);
+
+    // 내 메시지 판별에 닉네임이 필요하므로 로그인 직후 프로필을 함께 받아둔다
+    const profile = await apiClient.get('/api/users/me');
+    localStorage.setItem('userNickname', unwrap<UserResponse>(profile).nickname);
+
+    return token;
   },
 
   async reissue(): Promise<TokenResponse> {
@@ -60,21 +52,17 @@ export const authService = {
       return mockTokenResponse;
     }
 
-    try {
-      const response = await apiClient.post('/api/auth/reissue');
-      saveTokens(response.data);
-      return response.data;
-    } catch (error) {
-      console.warn('reissue: API 호출 실패, mock 데이터로 대체합니다');
-      return mockTokenResponse;
-    }
+    const response = await apiClient.post('/api/auth/reissue');
+    const token = unwrap<TokenResponse>(response);
+    saveTokens(token);
+    return token;
   },
 
   async logout(): Promise<void> {
     if (!USE_MOCK) {
       try {
         await apiClient.post('/api/auth/logout');
-      } catch (error) {
+      } catch {
         console.warn('로그아웃 요청 실패, 로컬 저장소만 정리합니다');
       }
     }
