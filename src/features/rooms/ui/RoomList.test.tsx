@@ -24,15 +24,23 @@ describe('RoomList', () => {
     expect(firstRoom).toHaveAttribute('href', '/chat/1');
   });
 
-  it('참여 인원 수를 표시한다', async () => {
+  it('마지막 메시지를 미리보기로 보여준다', async () => {
     render(<RoomList />);
     await screen.findByText('이서연');
 
-    // 숫자와 "명 참여" 가 서로 다른 텍스트 노드로 쪼개지므로 전체 문자열로 비교한다
-    const memberCounts = screen
-      .getAllByText(/명 참여/)
-      .map((el) => el.textContent);
+    expect(
+      screen.getByText('고마워! 의견 있으면 언제든 말해줘 😊')
+    ).toBeInTheDocument();
+    expect(screen.getByText('그럼 금요일 4시로 잡을게요.')).toBeInTheDocument();
+  });
 
-    expect(memberCounts).toEqual(['2명 참여', '5명 참여', '2명 참여', '3명 참여']);
+  it('안읽은 메시지가 있는 방만 배지를 표시한다', async () => {
+    render(<RoomList />);
+    await screen.findByText('이서연');
+
+    // mockRooms 기준 unreadCount 는 2, 0, 1, 0
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.queryByText('0')).not.toBeInTheDocument();
   });
 });
