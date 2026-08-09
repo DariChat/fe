@@ -1,5 +1,6 @@
 import {
   connectWebSocket,
+  createClientMessageId,
   disconnectWebSocket,
   isConnected,
   onWebSocketConnect,
@@ -7,7 +8,7 @@ import {
   subscribeErrors,
   subscribeRoom,
 } from './websocket';
-import { MessageResponse } from '@/shared/types/api.types';
+import { ErrorDetail, MessageResponse } from '@/shared/types/api.types';
 
 const ROOM_ID = 1;
 
@@ -34,11 +35,25 @@ describe('websocket (mock 브로커)', () => {
     const received: MessageResponse[] = [];
     subscribeRoom(ROOM_ID, (message) => received.push(message));
 
-    expect(sendChatMessage(ROOM_ID, '안녕하세요')).toBe(true);
+    const clientMessageId = createClientMessageId();
+    expect(sendChatMessage(ROOM_ID, '안녕하세요', clientMessageId)).toBe(true);
 
     expect(received).toHaveLength(1);
     expect(received[0].content).toBe('안녕하세요');
     expect(received[0].senderNickname).toBe('민수');
+    expect(received[0].clientMessageId).toBe(clientMessageId);
+  });
+
+  it('같은 clientMessageId 로 재전송하면 중복 발행되지 않는다', () => {
+    const onMessage = jest.fn();
+    subscribeRoom(ROOM_ID, onMessage);
+
+    const clientMessageId = createClientMessageId();
+    sendChatMessage(ROOM_ID, '재시도 대상', clientMessageId);
+    // 실패했다고 보고 같은 id 로 다시 보낸다
+    expect(sendChatMessage(ROOM_ID, '재시도 대상', clientMessageId)).toBe(true);
+
+    expect(onMessage).toHaveBeenCalledTimes(1);
   });
 
   it('다른 방의 구독자에게는 전달되지 않는다', () => {
@@ -47,7 +62,7 @@ describe('websocket (mock 브로커)', () => {
     subscribeRoom(1, onRoom1);
     subscribeRoom(2, onRoom2);
 
-    sendChatMessage(1, 'room 1 전용');
+    sendChatMessage(1, 'room 1 전용', createClientMessageId());
 
     expect(onRoom1).toHaveBeenCalledTimes(1);
     expect(onRoom2).not.toHaveBeenCalled();
@@ -57,22 +72,25 @@ describe('websocket (mock 브로커)', () => {
     const onMessage = jest.fn();
     const subscription = subscribeRoom(ROOM_ID, onMessage);
 
-    sendChatMessage(ROOM_ID, '첫 메시지');
+    sendChatMessage(ROOM_ID, '첫 메시지', createClientMessageId());
     subscription?.unsubscribe();
-    sendChatMessage(ROOM_ID, '두 번째 메시지');
+    sendChatMessage(ROOM_ID, '두 번째 메시지', createClientMessageId());
 
     expect(onMessage).toHaveBeenCalledTimes(1);
   });
 
-  it('500자를 넘으면 백엔드처럼 검증 에러를 내려준다', () => {
-    const onError = jest.fn();
+  it('500자를 넘으면 백엔드처럼 ErrorResponse 형태로 에러를 내려준다', () => {
+    const errors: ErrorDetail[] = [];
     const onMessage = jest.fn();
-    subscribeErrors(onError);
+    subscribeErrors((detail) => errors.push(detail));
     subscribeRoom(ROOM_ID, onMessage);
 
-    expect(sendChatMessage(ROOM_ID, 'a'.repeat(501))).toBe(false);
+    expect(
+      sendChatMessage(ROOM_ID, 'a'.repeat(501), createClientMessageId())
+    ).toBe(false);
 
-    expect(onError).toHaveBeenCalledWith('입력값이 올바르지 않습니다.');
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toBe('입력값이 올바르지 않습니다.');
     expect(onMessage).not.toHaveBeenCalled();
   });
 
@@ -80,6 +98,6 @@ describe('websocket (mock 브로커)', () => {
     disconnectWebSocket();
 
     expect(isConnected()).toBe(false);
-    expect(sendChatMessage(ROOM_ID, '안녕')).toBe(false);
+    expect(sendChatMessage(ROOM_ID, '안녕', createClientMessageId())).toBe(false);
   });
 });
