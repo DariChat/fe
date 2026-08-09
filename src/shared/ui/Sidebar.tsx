@@ -3,43 +3,50 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+const NAV_ITEMS = [
+  { href: '/rooms', label: '채팅', icon: '💬', match: ['/rooms', '/chat'] },
+  { href: '/friends', label: '친구', icon: '👥', match: ['/friends'] },
+];
+
+/**
+ * 데스크톱 전용 아이콘 레일.
+ * 목록 패널과 대화창을 나란히 두려면 폭을 아껴야 해서 아이콘만 남겼다.
+ * 모바일에서는 BottomTabBar 가 이 역할을 대신한다.
+ */
 export function Sidebar() {
   const pathname = usePathname();
 
-  const isActive = (path: string) => pathname === path;
-
   return (
-    // 이미 헤더 높이를 뺀 컨테이너 안에 들어가므로 h-screen 이면 헤더 높이만큼 넘친다
-    <aside className="w-64 bg-white border-r border-gray-200 h-full flex flex-col">
-      <nav className="flex-1 px-4 py-6 space-y-2">
-        <Link
-          href="/rooms"
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition ${
-            isActive('/rooms')
-              ? 'bg-indigo-50 text-indigo-600'
-              : 'text-gray-700 hover:bg-gray-50'
-          }`}
-        >
-          <span className="text-xl">💬</span>
-          채팅
-        </Link>
+    <aside className="hidden md:flex w-20 flex-col items-center bg-white border-r border-gray-200 py-4 shrink-0">
+      <nav className="flex flex-col gap-2 w-full px-2">
+        {NAV_ITEMS.map((item) => {
+          const isActive = item.match.some((path) => pathname.startsWith(path));
 
-        <Link
-          href="/friends"
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition ${
-            isActive('/friends')
-              ? 'bg-indigo-50 text-indigo-600'
-              : 'text-gray-700 hover:bg-gray-50'
-          }`}
-        >
-          <span className="text-xl">👥</span>
-          친구
-        </Link>
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? 'page' : undefined}
+              title={item.label}
+              className={`flex flex-col items-center gap-1 py-3 rounded-xl transition ${
+                isActive
+                  ? 'bg-indigo-50 text-indigo-600'
+                  : 'text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <span className="text-xl leading-none">{item.icon}</span>
+              <span className="text-[11px] font-medium">{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="px-4 py-6 border-t border-gray-200">
-        <button className="w-full py-2 px-4 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-indigo-500/30 transition-all">
-          + 새 채팅
+      <div className="mt-auto px-2 w-full">
+        <button
+          title="새 채팅"
+          className="w-full aspect-square rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 text-white text-2xl font-light hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
+        >
+          +
         </button>
       </div>
     </aside>
