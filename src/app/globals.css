@@ -10,6 +10,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* 주소창이 접혔다 펴져도 레이아웃이 튀지 않게 한다 */
+  height: 100%;
 }
 
 body {
@@ -20,11 +22,39 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+  /* 스크롤 끝에서 페이지 전체가 딸려 오는 고무줄 효과 제거 (웹앱 느낌의 핵심) */
+  overscroll-behavior-y: none;
+  /* 탭할 때 파란 하이라이트가 번쩍이지 않도록 */
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* 버튼/네비게이션 같은 조작 요소는 길게 눌러도 텍스트가 선택되지 않게 한다.
+   입력창과 메시지 본문은 복사할 수 있어야 하므로 제외한다. */
+button,
+nav,
+header {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 노치·홈 인디케이터 영역을 피하기 위한 유틸리티 (viewportFit: cover 와 짝) */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 하단 고정 바에서 자체 여백 + 홈 인디케이터 여백을 함께 주고 싶을 때 */
+.pb-safe-2 {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
 }
 
 /* Scrollbar Styling */
@@ -44,4 +74,12 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* 모바일에서는 스크롤바가 콘텐츠 폭을 갉아먹지 않도록 숨긴다 */
+@media (max-width: 767px) {
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }
