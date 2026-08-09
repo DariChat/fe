@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { UserResponse } from '@/shared/types/api.types';
 import { userService } from '../service/userService';
+import { toErrorMessage } from '@/shared/api/client';
 
 interface ProfileFormProps {
   user: UserResponse;
@@ -47,8 +48,8 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       onUpdate(updated);
       setSuccess('프로필이 저장되었습니다!');
       setTimeout(() => setSuccess(''), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || '프로필 저장에 실패했습니다');
+    } catch (err) {
+      setError(toErrorMessage(err, '프로필 저장에 실패했습니다'));
     } finally {
       setIsLoading(false);
     }
@@ -78,8 +79,8 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       setPasswordData({ password: '', confirmPassword: '' });
       setSuccess('비밀번호가 변경되었습니다!');
       setTimeout(() => setSuccess(''), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || '비밀번호 변경에 실패했습니다');
+    } catch (err) {
+      setError(toErrorMessage(err, '비밀번호 변경에 실패했습니다'));
     } finally {
       setIsLoading(false);
     }

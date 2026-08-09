@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { UserResponse } from '@/shared/types/api.types';
 import { userService } from '@/features/users/service/userService';
 import { ProfileForm } from '@/features/users/ui/ProfileForm';
+import { toErrorMessage } from '@/shared/api/client';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -24,8 +25,8 @@ export default function ProfilePage() {
       try {
         const userData = await userService.getProfile();
         setUser(userData);
-      } catch (err: any) {
-        setError(err.response?.data?.message || '프로필을 불러오지 못했습니다');
+      } catch (err) {
+        setError(toErrorMessage(err, '프로필을 불러오지 못했습니다'));
       } finally {
         setIsLoading(false);
       }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { authService } from '../service/authService';
+import { toErrorMessage } from '@/shared/api/client';
 
 export function SignupForm() {
   const router = useRouter();
@@ -42,8 +43,8 @@ export function SignupForm() {
         nickname: formData.nickname,
       });
       router.push('/auth/login');
-    } catch (err: any) {
-      setError(err.response?.data?.message || '회원가입에 실패했습니다. 다시 시도해 주세요.');
+    } catch (err) {
+      setError(toErrorMessage(err, '회원가입에 실패했습니다. 다시 시도해 주세요.'));
     } finally {
       setIsLoading(false);
     }
