@@ -233,17 +233,32 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      <div className="border-b border-gray-200 bg-white p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm">
+      {/* 모바일에서는 앱 헤더가 숨겨지므로 이 헤더가 상단 안전영역까지 책임진다 */}
+      <div className="border-b border-gray-200 bg-white px-4 py-3 flex items-center justify-between pt-safe md:pt-3 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          {/* 모바일: 뒤로가기 / 데스크톱: 목록이 옆에 있으므로 불필요 */}
+          <Link
+            href="/rooms"
+            aria-label="채팅 목록으로"
+            className="md:hidden -ml-2 p-2 text-gray-600 text-xl leading-none"
+          >
+            ←
+          </Link>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm shrink-0">
             {room.roomName ? room.roomName.charAt(0).toUpperCase() : 'C'}
           </div>
-          <div>
-            <h2 className="font-semibold text-gray-800">{room.roomName || '1:1 채팅'}</h2>
+          <div className="min-w-0">
+            <h2 className="font-semibold text-gray-800 truncate">
+              {room.roomName || '1:1 채팅'}
+            </h2>
             <p className="text-xs text-gray-500">{room.memberCount}명 참여</p>
           </div>
         </div>
-        <Link href="/rooms" className="text-gray-500 hover:text-gray-700 transition text-xl">
+        <Link
+          href="/rooms"
+          aria-label="채팅 닫기"
+          className="hidden md:block text-gray-500 hover:text-gray-700 transition text-xl"
+        >
           ✕
         </Link>
       </div>
