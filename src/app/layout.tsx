@@ -2,9 +2,26 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
+  // 상대 경로로 적은 og:image 를 절대 URL 로 만들기 위한 기준값
+  metadataBase: new URL('https://dari-chat.vercel.app'),
   title: 'DariChat',
   description: '실시간 채팅 서비스',
   applicationName: 'DariChat',
+  openGraph: {
+    type: 'website',
+    siteName: 'DariChat',
+    title: 'DariChat',
+    description: '실시간으로 대화하는 가장 쉬운 방법',
+    url: '/',
+    locale: 'ko_KR',
+    images: [{ url: '/icons/icon-512.png', width: 512, height: 512 }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'DariChat',
+    description: '실시간으로 대화하는 가장 쉬운 방법',
+    images: ['/icons/icon-512.png'],
+  },
   // iOS 는 manifest 의 display 를 보지 않으므로 별도로 standalone 을 지정해야
   // 홈 화면에서 실행할 때 주소창 없이 뜬다
   appleWebApp: {
