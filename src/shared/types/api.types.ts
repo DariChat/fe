@@ -1,5 +1,5 @@
 /**
- * 배포 서버 스펙 기준 (http://52.78.23.95/v3/api-docs, Talkie API v1)
+ * 배포 서버 스펙 기준 (http://52.78.23.95/v3/api-docs, DariChat API v1)
  */
 
 // 공통 응답 래퍼 — 모든 REST 응답이 { success, data } 로 감싸져 온다

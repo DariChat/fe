@@ -27,9 +27,16 @@ export function Header({ userNickname = '사용자' }: HeaderProps) {
     <header className="bg-white border-b border-gray-200 shadow-sm pt-safe shrink-0">
       <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
         <Link href="/rooms" className="flex items-center gap-2">
-          <Image src="/logo.png" alt="" width={32} height={32} priority />
+          <Image
+            src="/icons/icon-512.png"
+            alt=""
+            width={512}
+            height={512}
+            className="w-8 h-8 rounded-[22%]"
+            priority
+          />
           <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
-            Talkieee
+            DariChat
           </span>
         </Link>
 

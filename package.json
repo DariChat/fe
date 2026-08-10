@@ -1,7 +1,7 @@
 {
-  "name": "talkieee-fe",
+  "name": "darichat-fe",
   "version": "1.0.0",
-  "description": "Talkieee Frontend with Next.js",
+  "description": "DariChat Frontend with Next.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

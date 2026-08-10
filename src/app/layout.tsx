@@ -2,14 +2,14 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Talkieee',
+  title: 'DariChat',
   description: '실시간 채팅 서비스',
-  applicationName: 'Talkieee',
+  applicationName: 'DariChat',
   // iOS 는 manifest 의 display 를 보지 않으므로 별도로 standalone 을 지정해야
   // 홈 화면에서 실행할 때 주소창 없이 뜬다
   appleWebApp: {
     capable: true,
-    title: 'Talkieee',
+    title: 'DariChat',
     statusBarStyle: 'default',
   },
   formatDetection: {

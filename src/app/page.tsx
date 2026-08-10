@@ -7,16 +7,17 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center min-h-dvh px-6 pt-safe pb-safe">
         <div className="text-center space-y-10 w-full max-w-sm">
           <div className="space-y-3">
+            {/* 아이콘은 모서리가 각진 원본이라 앱 아이콘처럼 보이게 직접 둥글린다 */}
             <Image
-              src="/logo.png"
+              src="/icons/icon-512.png"
               alt=""
-              width={140}
-              height={140}
-              className="mx-auto w-28 h-28 md:w-36 md:h-36"
+              width={512}
+              height={512}
+              className="mx-auto w-28 h-28 md:w-36 md:h-36 rounded-[22%]"
               priority
             />
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              Talkieee
+              DariChat
             </h1>
             <p className="text-lg md:text-xl text-gray-600">
               실시간으로 대화하는 가장 쉬운 방법

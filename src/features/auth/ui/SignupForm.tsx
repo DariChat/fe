@@ -55,15 +55,15 @@ export function SignupForm() {
       <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
         <div className="space-y-2 text-center">
           <Image
-            src="/logo.png"
+            src="/icons/icon-512.png"
             alt=""
-            width={72}
-            height={72}
-            className="mx-auto"
+            width={512}
+            height={512}
+            className="mx-auto w-[72px] h-[72px] rounded-[22%]"
             priority
           />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
-            Talkieee
+            DariChat
           </h1>
           <p className="text-gray-600 text-sm">계정을 만들고 대화를 시작하세요</p>
         </div>
