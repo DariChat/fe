@@ -3,15 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {
-  MessageResponse,
-  PublishStatus,
-  RoomSummaryResponse,
-} from '@/shared/types/api.types';
+import { MessageResponse, PublishStatus } from '@/shared/types/api.types';
 import { chatService, toCursor } from '@/features/chat/service/chatService';
 import { MessageList } from '@/features/chat/ui/MessageList';
 import { ChatInput } from '@/features/chat/ui/ChatInput';
-import { roomService } from '@/features/rooms/service/roomService';
+import { useRoomsStore } from '@/features/rooms/model/roomsStore';
 import { toErrorMessage } from '@/shared/api/client';
 import {
   connectWebSocket,
@@ -30,11 +26,22 @@ export default function ChatPage() {
   const router = useRouter();
   const roomId = Number(params.roomId);
 
-  const [room, setRoom] = useState<RoomSummaryResponse | null>(null);
+  const fetchRooms = useRoomsStore((state) => state.fetchRooms);
+  const markRoomRead = useRoomsStore((state) => state.markRoomRead);
+  const applyMessagePreview = useRoomsStore(
+    (state) => state.applyMessagePreview
+  );
+  const leaveRoomFromStore = useRoomsStore((state) => state.leaveRoom);
+  // 목록과 같은 출처를 써야 방을 만들거나 나갔을 때 양쪽이 어긋나지 않는다
+  const room = useRoomsStore(
+    (state) => state.rooms.find((r) => r.roomId === roomId) ?? null
+  );
+
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [currentUserNickname, setCurrentUserNickname] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -48,27 +55,33 @@ export default function ChatPage() {
    * 브로드캐스트로 되돌아온 메시지를 목록에 반영한다.
    * 내가 낙관적으로 그려둔 임시 메시지가 있으면 clientMessageId 로 찾아 교체한다.
    */
-  const upsertMessage = useCallback((incoming: MessageResponse) => {
-    setMessages((prev) => {
-      const index = prev.findIndex(
-        (m) =>
-          m.id === incoming.id ||
-          (Boolean(m.clientMessageId) &&
-            m.clientMessageId === incoming.clientMessageId)
-      );
-      if (index === -1) {
-        return [...prev, incoming];
-      }
-      const next = [...prev];
-      next[index] = incoming;
-      return next;
-    });
+  const upsertMessage = useCallback(
+    (incoming: MessageResponse) => {
+      setMessages((prev) => {
+        const index = prev.findIndex(
+          (m) =>
+            m.id === incoming.id ||
+            (Boolean(m.clientMessageId) &&
+              m.clientMessageId === incoming.clientMessageId)
+        );
+        if (index === -1) {
+          return [...prev, incoming];
+        }
+        const next = [...prev];
+        next[index] = incoming;
+        return next;
+      });
 
-    // 서버까지 도달했으므로 재시도 대기 상태를 해제한다
-    if (pendingRef.current?.clientMessageId === incoming.clientMessageId) {
-      pendingRef.current = null;
-    }
-  }, []);
+      // 옆에 목록이 함께 떠 있는 데스크톱에서 미리보기가 뒤처지지 않도록 한다
+      applyMessagePreview(roomId, incoming);
+
+      // 서버까지 도달했으므로 재시도 대기 상태를 해제한다
+      if (pendingRef.current?.clientMessageId === incoming.clientMessageId) {
+        pendingRef.current = null;
+      }
+    },
+    [applyMessagePreview, roomId]
+  );
 
   useEffect(() => {
     if (Number.isNaN(roomId)) {
@@ -85,13 +98,12 @@ export default function ChatPage() {
 
     const fetchChatData = async () => {
       try {
-        const rooms = await roomService.getMyRooms();
-        const foundRoom = rooms.find((r) => r.roomId === roomId);
-        if (!foundRoom) {
+        // 목록을 아직 안 받아왔다면(대화방 주소로 바로 들어온 경우) 여기서 채운다
+        await fetchRooms();
+        if (!useRoomsStore.getState().rooms.some((r) => r.roomId === roomId)) {
           setError('채팅방을 찾을 수 없습니다');
           return;
         }
-        setRoom(foundRoom);
 
         const msgs = await chatService.getMessages(roomId, undefined, PAGE_SIZE);
         setMessages(msgs);
@@ -106,7 +118,7 @@ export default function ChatPage() {
     };
 
     fetchChatData();
-  }, [roomId, router]);
+  }, [roomId, router, fetchRooms]);
 
   useEffect(() => {
     if (Number.isNaN(roomId)) return;
@@ -118,6 +130,8 @@ export default function ChatPage() {
     // 재연결될 때도 다시 호출되므로 구독을 여기서 건다
     onWebSocketConnect(() => {
       subscribeRoom(roomId, upsertMessage);
+      // 서버는 구독을 받은 시점에 이 방을 읽음 처리한다 (RoomSubscriptionListener)
+      markRoomRead(roomId);
       subscribeErrors((detail) => {
         setNotice(detail.message);
         // 실패한 메시지는 pendingRef 에 남겨 두고 FAILED 로 표시해 재시도를 열어둔다
@@ -134,7 +148,24 @@ export default function ChatPage() {
     return () => {
       disconnectWebSocket();
     };
-  }, [roomId, upsertMessage]);
+  }, [roomId, upsertMessage, markRoomRead]);
+
+  /** OWNER 가 나가면 서버가 소유권을 넘기거나(남은 멤버 있음) 방을 지운다 */
+  const handleLeaveRoom = async () => {
+    if (!window.confirm('이 채팅방에서 나갈까요? 대화 목록에서 사라집니다.')) {
+      return;
+    }
+
+    setIsLeaving(true);
+    try {
+      await leaveRoomFromStore(roomId);
+      disconnectWebSocket();
+      router.push('/rooms');
+    } catch (err) {
+      setNotice(toErrorMessage(err, '채팅방을 나가지 못했습니다'));
+      setIsLeaving(false);
+    }
+  };
 
   const handleLoadMore = async () => {
     if (isLoadingMore || !hasMore) return;
@@ -207,12 +238,15 @@ export default function ChatPage() {
     }
   };
 
-  if (isLoading) {
+  // 나가는 중에는 방이 목록에서 이미 빠졌으므로 '찾을 수 없음' 을 띄우지 않는다
+  if (isLoading || isLeaving) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">채팅을 불러오는 중...</p>
+          <p className="text-gray-600">
+            {isLeaving ? '채팅방에서 나가는 중...' : '채팅을 불러오는 중...'}
+          </p>
         </div>
       </div>
     );
@@ -254,13 +288,21 @@ export default function ChatPage() {
             <p className="text-xs text-gray-500">{room.memberCount}명 참여</p>
           </div>
         </div>
-        <Link
-          href="/rooms"
-          aria-label="채팅 닫기"
-          className="hidden md:block text-gray-500 hover:text-gray-700 transition text-xl"
-        >
-          ✕
-        </Link>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={handleLeaveRoom}
+            className="px-3 py-1.5 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 active:bg-red-100 transition"
+          >
+            나가기
+          </button>
+          <Link
+            href="/rooms"
+            aria-label="채팅 닫기"
+            className="hidden md:block px-2 text-gray-500 hover:text-gray-700 transition text-xl"
+          >
+            ✕
+          </Link>
+        </div>
       </div>
 
       {notice && (

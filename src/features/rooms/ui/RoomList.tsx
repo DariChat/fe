@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { RoomSummaryResponse } from '@/shared/types/api.types';
-import { toErrorMessage } from '@/shared/api/client';
-import { roomService } from '../service/roomService';
+import { usePathname, useRouter } from 'next/navigation';
+import { useRoomsStore } from '../model/roomsStore';
+import { CreateRoomModal } from './CreateRoomModal';
 
 const formatLastMessageAt = (timestamp: string | null) => {
   if (!timestamp) return '';
@@ -24,26 +23,33 @@ const formatLastMessageAt = (timestamp: string | null) => {
 
 export function RoomList() {
   const pathname = usePathname();
-  const [rooms, setRooms] = useState<RoomSummaryResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const router = useRouter();
+
+  const rooms = useRoomsStore((state) => state.rooms);
+  const isLoading = useRoomsStore((state) => state.isLoading);
+  const hasLoaded = useRoomsStore((state) => state.hasLoaded);
+  const error = useRoomsStore((state) => state.error);
+  const fetchRooms = useRoomsStore((state) => state.fetchRooms);
+
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const data = await roomService.getMyRooms();
-        setRooms(data);
-      } catch (err) {
-        setError(toErrorMessage(err, '채팅 목록을 불러오지 못했습니다'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchRooms();
-  }, []);
+  }, [fetchRooms]);
 
-  if (isLoading) {
+  const handleCreated = (roomId: number) => {
+    setIsCreating(false);
+    router.push(`/chat/${roomId}`);
+  };
+
+  const createRoomModal = isCreating && (
+    <CreateRoomModal
+      onClose={() => setIsCreating(false)}
+      onCreated={handleCreated}
+    />
+  );
+
+  if (isLoading || !hasLoaded) {
     return (
       <div className="flex items-center justify-center flex-1">
         <div className="text-center">
@@ -60,7 +66,7 @@ export function RoomList() {
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => fetchRooms({ force: true })}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
           >
             다시 시도
@@ -75,19 +81,30 @@ export function RoomList() {
       <div className="flex items-center justify-center flex-1 p-6">
         <div className="text-center">
           <p className="text-gray-600 mb-4">아직 채팅방이 없어요</p>
-          <button className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all">
+          <button
+            onClick={() => setIsCreating(true)}
+            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
+          >
             + 채팅 시작하기
           </button>
         </div>
+        {createRoomModal}
       </div>
     );
   }
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <h2 className="text-lg font-bold text-gray-800 px-4 pt-4 pb-2 shrink-0">
-        내 채팅
-      </h2>
+      <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
+        <h2 className="text-lg font-bold text-gray-800">내 채팅</h2>
+        <button
+          onClick={() => setIsCreating(true)}
+          aria-label="새 채팅방 만들기"
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-600 text-white text-lg leading-none hover:bg-indigo-700 active:bg-indigo-800 transition"
+        >
+          +
+        </button>
+      </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-2">
         {rooms.map((room) => {
@@ -136,6 +153,8 @@ export function RoomList() {
           );
         })}
       </div>
+
+      {createRoomModal}
     </div>
   );
 }
