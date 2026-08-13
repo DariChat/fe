@@ -2,13 +2,22 @@ import {
   connectWebSocket,
   createClientMessageId,
   disconnectWebSocket,
+  emitMockFriendEvent,
+  emitMockRoomEvent,
   isConnected,
   onWebSocketConnect,
   sendChatMessage,
   subscribeErrors,
+  subscribeFriendEvents,
   subscribeRoom,
+  subscribeRoomEvents,
 } from './websocket';
-import { ErrorDetail, MessageResponse } from '@/shared/types/api.types';
+import {
+  ErrorDetail,
+  FriendEventType,
+  MessageResponse,
+  RoomEventType,
+} from '@/shared/types/api.types';
 
 const ROOM_ID = 1;
 
@@ -92,6 +101,55 @@ describe('websocket (mock 브로커)', () => {
     expect(errors).toHaveLength(1);
     expect(errors[0].message).toBe('입력값이 올바르지 않습니다.');
     expect(onMessage).not.toHaveBeenCalled();
+  });
+
+  // 실제 STOMP 클라이언트에서의 동작은 websocket.live.test.ts 가 검증한다
+  it('연결 콜백을 여러 곳에서 걸어도 서로 지우지 않는다', () => {
+    // 레이아웃(개인 큐)과 대화방(방 토픽)이 각각 구독을 걸어야 한다
+    const onLayoutConnect = jest.fn();
+    const onChatConnect = jest.fn();
+
+    onWebSocketConnect(onLayoutConnect);
+    onWebSocketConnect(onChatConnect);
+
+    expect(onLayoutConnect).toHaveBeenCalled();
+    expect(onChatConnect).toHaveBeenCalled();
+  });
+
+  it('개인 큐 이벤트는 각 큐의 구독자에게만 전달된다', () => {
+    const onRoomEvent = jest.fn();
+    const onFriendEvent = jest.fn();
+    subscribeRoomEvents(onRoomEvent);
+    subscribeFriendEvents(onFriendEvent);
+
+    emitMockRoomEvent({
+      type: RoomEventType.ROOM_UPDATED,
+      room: {
+        roomId: ROOM_ID,
+        roomName: '스터디',
+        lastMessage: '새 메시지',
+        lastMessageAt: '2026-08-14T10:00:00',
+        memberCount: 3,
+        unreadCount: 1,
+      },
+    });
+
+    expect(onRoomEvent).toHaveBeenCalledTimes(1);
+    expect(onFriendEvent).not.toHaveBeenCalled();
+  });
+
+  it('개인 큐도 unsubscribe 하면 더 이상 수신하지 않는다', () => {
+    const onFriendEvent = jest.fn();
+    const subscription = subscribeFriendEvents(onFriendEvent);
+
+    subscription?.unsubscribe();
+    emitMockFriendEvent({
+      type: FriendEventType.REQUEST_RECEIVED,
+      request: null,
+      friend: null,
+    });
+
+    expect(onFriendEvent).not.toHaveBeenCalled();
   });
 
   it('연결이 끊긴 상태에서는 전송에 실패한다', () => {

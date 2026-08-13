@@ -12,6 +12,7 @@ const buildMockRoom = (data: RoomCreateRequest): RoomResponse => ({
   roomName: data.roomName || '새 채팅방',
   roomType: data.roomType,
   memberCount: data.memberIds.length + 1,
+  alreadyExists: false,
 });
 
 export const roomService = {

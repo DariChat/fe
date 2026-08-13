@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import { FriendRequestResponse, FriendResponse } from '@/shared/types/api.types';
+import {
+  FriendEvent,
+  FriendEventType,
+  FriendRequestResponse,
+  FriendResponse,
+} from '@/shared/types/api.types';
 import { toErrorMessage } from '@/shared/api/client';
 import { friendService } from '../service/friendService';
 
@@ -20,6 +25,7 @@ interface FriendsState {
   sendRequest: (addresseeId: number) => Promise<void>;
   acceptRequest: (friendshipId: number) => Promise<void>;
   rejectRequest: (friendshipId: number) => Promise<void>;
+  applyFriendEvent: (event: FriendEvent) => void;
   reset: () => void;
 }
 
@@ -95,6 +101,37 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
         (request) => request.friendshipId !== friendshipId
       ),
     }));
+  },
+
+  /**
+   * /user/queue/friends 로 밀려온 변화를 반영한다.
+   *
+   * 같은 이벤트가 두 번 와도(재연결 직후 등) 목록이 불어나지 않도록
+   * friendshipId · userId 로 이미 있는지 보고 넣는다.
+   */
+  applyFriendEvent(event) {
+    if (event.type === FriendEventType.REQUEST_RECEIVED && event.request) {
+      const request = event.request;
+      set((state) =>
+        state.requests.some((r) => r.friendshipId === request.friendshipId)
+          ? state
+          : { requests: [request, ...state.requests] }
+      );
+      return;
+    }
+
+    if (event.type === FriendEventType.REQUEST_ACCEPTED && event.friend) {
+      const friend = event.friend;
+      set((state) => ({
+        friends: state.friends.some((f) => f.userId === friend.userId)
+          ? state.friends
+          : [...state.friends, friend],
+        // 이제 친구가 됐으니 검색 결과의 '요청함' 표시를 붙들고 있을 이유가 없다
+        requestedUserIds: state.requestedUserIds.filter(
+          (id) => id !== friend.userId
+        ),
+      }));
+    }
   },
 
   reset() {

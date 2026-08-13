@@ -27,7 +27,7 @@ export default function FriendsPage() {
   /** 목록 조회 실패(storeError)와 달리 화면을 비우지 않는 일시적 알림 */
   const [notice, setNotice] = useState('');
 
-  // 상대가 내 요청을 수락해도 알림이 오지 않으므로 화면에 있는 동안 계속 확인한다
+  // 요청 도착·수락은 /user/queue/friends 로 밀려온다. 이건 첫 조회 + 놓친 구간 보정용이다.
   useAutoRefresh(
     useCallback(() => {
       fetchAll({ force: true });

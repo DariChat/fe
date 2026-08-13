@@ -1,4 +1,4 @@
-import { RoomType } from '@/shared/types/api.types';
+import { RoomEventType, RoomType } from '@/shared/types/api.types';
 import { mockRooms } from '@/shared/api/mockData';
 import { useRoomsStore } from './roomsStore';
 
@@ -61,6 +61,46 @@ describe('roomsStore (mock 모드)', () => {
     expect(
       store().rooms.find((r) => r.roomId === unread.roomId)!.unreadCount
     ).toBe(0);
+  });
+
+  it('ROOM_UPDATED 푸시는 서버가 준 요약으로 갈아끼우고 맨 앞으로 올린다', async () => {
+    await store().fetchRooms({ force: true });
+    const target = store().rooms[store().rooms.length - 1];
+
+    store().applyRoomEvent({
+      type: RoomEventType.ROOM_UPDATED,
+      room: { ...target, lastMessage: '안 보던 방에 온 메시지', unreadCount: 3 },
+    });
+
+    expect(store().rooms[0]).toMatchObject({
+      roomId: target.roomId,
+      lastMessage: '안 보던 방에 온 메시지',
+      unreadCount: 3,
+    });
+    // 갈아끼운 것이지 새로 추가한 것이 아니다
+    expect(
+      store().rooms.filter((r) => r.roomId === target.roomId)
+    ).toHaveLength(1);
+  });
+
+  it('ROOM_CREATED 푸시는 목록에 없던 방을 추가한다', async () => {
+    await store().fetchRooms({ force: true });
+    const before = store().rooms.length;
+
+    store().applyRoomEvent({
+      type: RoomEventType.ROOM_CREATED,
+      room: {
+        roomId: 987654,
+        roomName: '초대받은 방',
+        lastMessage: null,
+        lastMessageAt: null,
+        memberCount: 3,
+        unreadCount: 0,
+      },
+    });
+
+    expect(store().rooms).toHaveLength(before + 1);
+    expect(store().rooms[0].roomId).toBe(987654);
   });
 
   it('applyMessagePreview 는 마지막 메시지 미리보기를 갱신한다', async () => {

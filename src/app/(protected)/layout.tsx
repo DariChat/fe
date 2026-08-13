@@ -7,6 +7,7 @@ import { Sidebar } from '@/shared/ui/Sidebar';
 import { BottomTabBar } from '@/shared/ui/BottomTabBar';
 import { RoomList } from '@/features/rooms/ui/RoomList';
 import { userService } from '@/features/users/service/userService';
+import { useServerEvents } from './useServerEvents';
 
 export default function ProtectedLayout({
   children,
@@ -22,6 +23,9 @@ export default function ProtectedLayout({
   const isChatRoom = pathname.startsWith('/chat/');
   // 채팅 목록 패널을 띄우는 영역인지 (친구·프로필에서는 띄우지 않는다)
   const isChatArea = isRoomsRoute || isChatRoom;
+
+  // 방·친구 변화는 서버가 개인 큐로 밀어준다. 연결은 로그인 영역 전체에서 하나만 쓴다.
+  useServerEvents();
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');

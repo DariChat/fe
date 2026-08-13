@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import {
   RoomCreateRequest,
+  RoomEvent,
+  RoomEventType,
   RoomResponse,
   RoomSummaryResponse,
 } from '@/shared/types/api.types';
@@ -23,6 +25,11 @@ const toSummary = (room: RoomResponse): RoomSummaryResponse => ({
   unreadCount: 0,
 });
 
+const HANDLED_ROOM_EVENTS: RoomEventType[] = [
+  RoomEventType.ROOM_CREATED,
+  RoomEventType.ROOM_UPDATED,
+];
+
 interface RoomsState {
   rooms: RoomSummaryResponse[];
   /** 한 번이라도 목록을 받아왔는지 — 화면을 옮길 때마다 다시 부르지 않으려고 둔다 */
@@ -37,6 +44,7 @@ interface RoomsState {
     roomId: number,
     message: { content: string; createdAt: string }
   ) => void;
+  applyRoomEvent: (event: RoomEvent) => void;
   reset: () => void;
 }
 
@@ -116,6 +124,28 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
             }
           : room
       ),
+    }));
+  },
+
+  /**
+   * /user/queue/rooms 로 밀려온 변화를 목록에 반영한다.
+   *
+   * 서버가 그 사용자 기준으로 계산한 요약(안 읽은 수 포함)을 통째로 보내주므로
+   * 항목을 부분 수정하지 않고 그대로 갈아끼운 뒤 맨 앞으로 올린다.
+   * 방을 만든 쪽에도 ROOM_CREATED 가 오는데, createRoom 이 이미 넣어둔 항목과
+   * roomId 가 같으므로 중복되지 않고 최신 요약으로 덮인다.
+   */
+  applyRoomEvent(event) {
+    // 서버가 나중에 새 타입을 늘려도 모르는 이벤트로 목록을 흔들지 않는다
+    if (!HANDLED_ROOM_EVENTS.includes(event.type) || !event.room) {
+      return;
+    }
+
+    set((state) => ({
+      rooms: [
+        event.room,
+        ...state.rooms.filter((room) => room.roomId !== event.room.roomId),
+      ],
     }));
   },
 

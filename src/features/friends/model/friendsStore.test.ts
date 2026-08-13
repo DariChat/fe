@@ -1,3 +1,8 @@
+import {
+  FriendEvent,
+  FriendEventType,
+  FriendshipStatus,
+} from '@/shared/types/api.types';
 import { useFriendsStore } from './friendsStore';
 import { resetFriendMocks } from '../service/friendService';
 
@@ -64,5 +69,60 @@ describe('useFriendsStore (mock 모드)', () => {
     await useFriendsStore.getState().sendRequest(24);
 
     expect(useFriendsStore.getState().requestedUserIds).toContain(24);
+  });
+
+  describe('서버 푸시 이벤트 (/user/queue/friends)', () => {
+    const receivedEvent: FriendEvent = {
+      type: FriendEventType.REQUEST_RECEIVED,
+      request: {
+        friendshipId: 9001,
+        requesterId: 77,
+        requesterNickname: '지훈',
+        requesterProfileImageUrl: null,
+        status: FriendshipStatus.PENDING,
+        createdAt: '2026-08-14T10:00:00',
+      },
+      friend: null,
+    };
+
+    const acceptedEvent: FriendEvent = {
+      type: FriendEventType.REQUEST_ACCEPTED,
+      request: null,
+      friend: { userId: 24, nickname: '수아', profileImageUrl: null },
+    };
+
+    it('요청이 도착하면 받은 요청 맨 앞에 꽂힌다', async () => {
+      await useFriendsStore.getState().fetchAll();
+      const before = useFriendsStore.getState().requests.length;
+
+      useFriendsStore.getState().applyFriendEvent(receivedEvent);
+
+      const { requests } = useFriendsStore.getState();
+      expect(requests).toHaveLength(before + 1);
+      expect(requests[0].friendshipId).toBe(9001);
+    });
+
+    it('같은 이벤트가 두 번 와도 목록이 불어나지 않는다', async () => {
+      await useFriendsStore.getState().fetchAll();
+
+      useFriendsStore.getState().applyFriendEvent(receivedEvent);
+      useFriendsStore.getState().applyFriendEvent(receivedEvent);
+
+      expect(
+        useFriendsStore
+          .getState()
+          .requests.filter((request) => request.friendshipId === 9001)
+      ).toHaveLength(1);
+    });
+
+    it('상대가 수락하면 친구 목록에 들어가고 요청함 표시가 풀린다', async () => {
+      await useFriendsStore.getState().sendRequest(24);
+
+      useFriendsStore.getState().applyFriendEvent(acceptedEvent);
+
+      const { friends, requestedUserIds } = useFriendsStore.getState();
+      expect(friends.some((friend) => friend.userId === 24)).toBe(true);
+      expect(requestedUserIds).not.toContain(24);
+    });
   });
 });

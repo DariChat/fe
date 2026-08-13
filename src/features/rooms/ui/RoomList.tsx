@@ -35,8 +35,8 @@ export function RoomList() {
   const [isCreating, setIsCreating] = useState(false);
 
   /*
-   * 남이 나를 새 방에 초대해도, 다른 방에 메시지가 쌓여도 알림이 오지 않는다.
-   * (WebSocket 은 지금 보고 있는 방의 메시지만 밀어준다)
+   * 초대·새 메시지는 서버가 /user/queue/rooms 로 밀어주므로(useServerEvents)
+   * 여기서 주기적으로 물어보는 건 소켓이 끊겼던 구간을 메우는 안전망이다.
    *
    * 이 목록은 레이아웃에 항상 매달려 있고 친구·프로필 화면에서는 숨겨지기만 한다.
    * 숨어 있는 동안에는 받아와도 볼 사람이 없으므로 채팅 영역에서만 갱신한다.

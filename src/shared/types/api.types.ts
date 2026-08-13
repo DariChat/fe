@@ -114,12 +114,17 @@ export interface RoomCreateRequest {
   memberIds: number[];
 }
 
-/** 방 생성 응답 */
+/**
+ * 방 생성 응답.
+ * alreadyExists 는 1:1 방을 다시 만들려 했을 때 서버가 기존 방을 그대로 돌려줬다는 표시다.
+ * (이 경우 응답 코드도 201 이 아니라 200 으로 온다)
+ */
 export interface RoomResponse {
   roomId: number;
   roomName: string | null;
   roomType: RoomType;
   memberCount: number;
+  alreadyExists: boolean;
 }
 
 /** 내 방 목록 응답 — roomType 이 없고 마지막 메시지/안읽은 수가 함께 온다 */
@@ -130,6 +135,43 @@ export interface RoomSummaryResponse {
   lastMessageAt: string | null;
   memberCount: number;
   unreadCount: number;
+}
+
+/*
+ * 서버 푸시 이벤트 (RoomNotificationListener · FriendNotificationListener)
+ *
+ * 방 목록·친구 목록의 변화는 이제 개인 큐로 밀려온다.
+ *   /user/queue/rooms   → RoomEvent
+ *   /user/queue/friends → FriendEvent
+ *
+ * 두 큐 모두 convertAndSendToUser 로 보내므로 구독 주소에 사용자 id 를 붙이지 않는다.
+ * STOMP 가 CONNECT 한 세션의 Principal 을 보고 알아서 갈라준다.
+ */
+
+export enum RoomEventType {
+  /** 누군가 나를 새 방에 넣었다 */
+  ROOM_CREATED = 'ROOM_CREATED',
+  /** 안 보고 있는 방에 새 메시지가 왔거나, 멤버가 방을 나갔다 */
+  ROOM_UPDATED = 'ROOM_UPDATED',
+}
+
+export interface RoomEvent {
+  type: RoomEventType;
+  room: RoomSummaryResponse;
+}
+
+export enum FriendEventType {
+  /** 누군가 나에게 친구 요청을 보냈다 */
+  REQUEST_RECEIVED = 'REQUEST_RECEIVED',
+  /** 내가 보낸 요청을 상대가 수락했다 */
+  REQUEST_ACCEPTED = 'REQUEST_ACCEPTED',
+}
+
+/** type 에 따라 둘 중 하나만 채워져 오고 나머지는 null 이다 */
+export interface FriendEvent {
+  type: FriendEventType;
+  request: FriendRequestResponse | null;
+  friend: FriendResponse | null;
 }
 
 // 메시지

@@ -2,8 +2,10 @@ import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import {
   ErrorDetail,
   ErrorResponse,
+  FriendEvent,
   MessageResponse,
   PublishStatus,
+  RoomEvent,
 } from '@/shared/types/api.types';
 import { USE_MOCK, WS_URL } from '@/shared/config/env';
 
@@ -16,10 +18,24 @@ import { USE_MOCK, WS_URL } from '@/shared/config/env';
 const APP_PREFIX = '/pub';
 const TOPIC_PREFIX = '/sub';
 const USER_ERROR_QUEUE = '/user/queue/errors'; // @SendToUser("/queue/errors")
+/* convertAndSendToUser(userId, "/queue/rooms" | "/queue/friends", ...) */
+const USER_ROOM_QUEUE = '/user/queue/rooms';
+const USER_FRIEND_QUEUE = '/user/queue/friends';
 
 const MAX_CONTENT_LENGTH = 500; // ChatMessageRequest 의 @Size(max = 500)
 
 let client: Client | null = null;
+
+/*
+ * 연결 시점에 구독을 거는 쪽이 둘 이상이다 — 레이아웃(개인 큐)과 대화방(방 토픽).
+ * client.onConnect 는 자리가 하나뿐이라 나중에 등록한 쪽이 앞의 것을 지워버리므로
+ * 콜백을 여기 모아두고 onConnect 에서 한 번에 호출한다.
+ */
+const connectListeners = new Set<() => void>();
+
+const notifyConnected = () => {
+  connectListeners.forEach((listener) => listener());
+};
 
 /** 전송 실패 후 재시도할 때 같은 id 를 다시 써야 서버가 중복 저장하지 않는다 */
 export const createClientMessageId = (): string =>
@@ -33,9 +49,13 @@ export const createClientMessageId = (): string =>
 
 type RoomHandler = (message: MessageResponse) => void;
 type ErrorHandler = (error: ErrorDetail) => void;
+type RoomEventHandler = (event: RoomEvent) => void;
+type FriendEventHandler = (event: FriendEvent) => void;
 
 const mockRoomHandlers = new Map<number, Set<RoomHandler>>();
 const mockErrorHandlers = new Set<ErrorHandler>();
+const mockRoomEventHandlers = new Set<RoomEventHandler>();
+const mockFriendEventHandlers = new Set<FriendEventHandler>();
 /** 서버의 findByClientMessageId 멱등 처리를 흉내내기 위한 저장소 */
 const mockSentMessages = new Map<string, MessageResponse>();
 let mockConnected = false;
@@ -65,6 +85,11 @@ export const connectWebSocket = (token: string): Client | null => {
     reconnectDelay: 5000,
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000,
+    // 재연결될 때마다 다시 호출된다 — 구독은 그때마다 새로 걸어야 한다
+    onConnect: () => {
+      console.log('STOMP connected');
+      notifyConnected();
+    },
     onDisconnect: () => {
       console.log('STOMP disconnected');
     },
@@ -85,23 +110,27 @@ export const getWebSocket = (): Client | null => client;
 export const isConnected = (): boolean =>
   USE_MOCK ? mockConnected : Boolean(client?.connected);
 
-/** 연결 완료 시점에 구독을 걸 수 있도록 onConnect 콜백을 등록한다 */
-export const onWebSocketConnect = (callback: () => void): void => {
+/**
+ * 연결 완료 시점에 구독을 걸 수 있도록 콜백을 등록한다.
+ * 이미 연결돼 있으면 즉시 한 번 부르고, 이후 재연결될 때마다 다시 부른다.
+ *
+ * 반환값은 등록 해제 함수다 — 화면이 사라질 때 풀어주지 않으면
+ * 재연결될 때 죽은 화면의 구독까지 되살아난다.
+ */
+export const onWebSocketConnect = (callback: () => void): (() => void) => {
   if (USE_MOCK) {
     callback();
-    return;
+    return () => {};
   }
 
-  if (!client) return;
+  connectListeners.add(callback);
 
-  if (client.connected) {
+  if (client?.connected) {
     callback();
-    return;
   }
-  // 재연결될 때마다 구독을 다시 걸어야 하므로 onConnect 를 계속 유지한다
-  client.onConnect = () => {
-    console.log('STOMP connected');
-    callback();
+
+  return () => {
+    connectListeners.delete(callback);
   };
 };
 
@@ -128,6 +157,60 @@ export const subscribeRoom = (
       onMessage(JSON.parse(frame.body) as MessageResponse);
     }
   );
+};
+
+/**
+ * /user/queue/rooms — 방 목록의 변화를 서버가 밀어준다 (RoomNotificationListener).
+ *
+ * 보고 있지 않은 방의 새 메시지는 여기로만 온다.
+ * 서버가 /sub/rooms/{roomId} 구독자에게는 ROOM_UPDATED 를 보내지 않기 때문에
+ * 지금 열어둔 방의 미리보기는 여전히 방 토픽 쪽에서 갱신해야 한다.
+ */
+export const subscribeRoomEvents = (
+  onEvent: RoomEventHandler
+): StompSubscription | null => {
+  if (USE_MOCK) {
+    mockRoomEventHandlers.add(onEvent);
+    return mockSubscription(() => mockRoomEventHandlers.delete(onEvent));
+  }
+
+  if (!client?.connected) {
+    return null;
+  }
+
+  return client.subscribe(USER_ROOM_QUEUE, (frame: IMessage) => {
+    onEvent(JSON.parse(frame.body) as RoomEvent);
+  });
+};
+
+/** /user/queue/friends — 친구 요청 도착·수락을 서버가 밀어준다 (FriendNotificationListener) */
+export const subscribeFriendEvents = (
+  onEvent: FriendEventHandler
+): StompSubscription | null => {
+  if (USE_MOCK) {
+    mockFriendEventHandlers.add(onEvent);
+    return mockSubscription(() => mockFriendEventHandlers.delete(onEvent));
+  }
+
+  if (!client?.connected) {
+    return null;
+  }
+
+  return client.subscribe(USER_FRIEND_QUEUE, (frame: IMessage) => {
+    onEvent(JSON.parse(frame.body) as FriendEvent);
+  });
+};
+
+/**
+ * mock 모드에는 이벤트를 만들어줄 서버가 없다.
+ * 테스트와 mock 화면에서 푸시가 온 상황을 직접 재현할 때 쓴다.
+ */
+export const emitMockRoomEvent = (event: RoomEvent): void => {
+  mockRoomEventHandlers.forEach((handler) => handler(event));
+};
+
+export const emitMockFriendEvent = (event: FriendEvent): void => {
+  mockFriendEventHandlers.forEach((handler) => handler(event));
 };
 
 /** @MessageExceptionHandler 가 ErrorResponse JSON 을 보내는 개인 에러 큐 */
@@ -214,9 +297,13 @@ export const disconnectWebSocket = (): void => {
     mockConnected = false;
     mockRoomHandlers.clear();
     mockErrorHandlers.clear();
+    mockRoomEventHandlers.clear();
+    mockFriendEventHandlers.clear();
     mockSentMessages.clear();
     return;
   }
+
+  connectListeners.clear();
 
   if (client) {
     client.deactivate();

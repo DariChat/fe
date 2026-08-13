@@ -14,10 +14,10 @@ import { MessageList } from '@/features/chat/ui/MessageList';
 import { ChatInput } from '@/features/chat/ui/ChatInput';
 import { useRoomsStore } from '@/features/rooms/model/roomsStore';
 import { toErrorMessage } from '@/shared/api/client';
+import { StompSubscription } from '@stomp/stompjs';
 import {
   connectWebSocket,
   createClientMessageId,
-  disconnectWebSocket,
   onWebSocketConnect,
   sendChatMessage,
   subscribeErrors,
@@ -133,27 +133,41 @@ export default function ChatPage() {
     const token = localStorage.getItem('accessToken');
     if (!token) return;
 
+    /*
+     * 연결 자체는 레이아웃(useServerEvents)이 잡고 있다.
+     * 여기서는 이 방의 토픽만 얹고, 방을 벗어날 때 그 구독만 푼다.
+     * 연결까지 끊으면 대화방을 나가는 순간 개인 큐 알림이 죽는다.
+     *
+     * 레이아웃보다 자식 effect 가 먼저 도는 경우가 있어 연결 호출은 그대로 둔다
+     * (이미 연결돼 있으면 기존 클라이언트를 그대로 돌려준다).
+     */
     connectWebSocket(token);
+
+    let subscriptions: (StompSubscription | null)[] = [];
+
     // 재연결될 때도 다시 호출되므로 구독을 여기서 건다
-    onWebSocketConnect(() => {
-      subscribeRoom(roomId, upsertMessage);
+    const off = onWebSocketConnect(() => {
+      subscriptions = [
+        subscribeRoom(roomId, upsertMessage),
+        subscribeErrors((detail) => {
+          setNotice(detail.message);
+          // 실패한 메시지는 pendingRef 에 남겨 두고 FAILED 로 표시해 재시도를 열어둔다
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.clientMessageId === pendingRef.current?.clientMessageId
+                ? { ...m, publishStatus: PublishStatus.FAILED }
+                : m
+            )
+          );
+        }),
+      ];
       // 서버는 구독을 받은 시점에 이 방을 읽음 처리한다 (RoomSubscriptionListener)
       markRoomRead(roomId);
-      subscribeErrors((detail) => {
-        setNotice(detail.message);
-        // 실패한 메시지는 pendingRef 에 남겨 두고 FAILED 로 표시해 재시도를 열어둔다
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.clientMessageId === pendingRef.current?.clientMessageId
-              ? { ...m, publishStatus: PublishStatus.FAILED }
-              : m
-          )
-        );
-      });
     });
 
     return () => {
-      disconnectWebSocket();
+      off();
+      subscriptions.forEach((subscription) => subscription?.unsubscribe());
     };
   }, [roomId, upsertMessage, markRoomRead]);
 
@@ -166,7 +180,7 @@ export default function ChatPage() {
     setIsLeaving(true);
     try {
       await leaveRoomFromStore(roomId);
-      disconnectWebSocket();
+      // 구독 해제는 이 화면이 사라질 때 effect 정리에서 함께 처리된다
       router.push('/rooms');
     } catch (err) {
       setNotice(toErrorMessage(err, '채팅방을 나가지 못했습니다'));
