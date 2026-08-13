@@ -71,7 +71,16 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
         (request) => request.friendshipId !== friendshipId
       ),
     }));
-    set({ friends: await friendService.getFriends() });
+
+    /*
+     * 여기서 던지면 수락은 이미 성공했는데도 화면에는 실패로 보인다.
+     * 친구 목록 갱신은 덤이므로 실패해도 수락 자체는 성공으로 남긴다.
+     */
+    try {
+      set({ friends: await friendService.getFriends() });
+    } catch {
+      console.warn('친구 목록 갱신에 실패했습니다. 다음 조회 때 반영됩니다.');
+    }
   },
 
   async rejectRequest(friendshipId) {

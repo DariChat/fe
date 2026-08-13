@@ -53,7 +53,8 @@ export const friendService = {
     return unwrap<FriendRequestResponse>(response);
   },
 
-  async acceptRequest(friendshipId: number): Promise<FriendRequestResponse> {
+  /** 서버 응답은 ApiResponse<Void> 라 data 가 비어 있다 (수락 결과는 목록 재조회로 확인한다) */
+  async acceptRequest(friendshipId: number): Promise<void> {
     if (USE_MOCK) {
       const accepted = mockRequestState.find(
         (request) => request.friendshipId === friendshipId
@@ -71,16 +72,13 @@ export const friendService = {
             profileImageUrl: accepted.requesterProfileImageUrl,
           },
         ];
-        return { ...accepted, status: FriendshipStatus.ACCEPTED };
+        return;
       }
 
       throw new Error('요청을 찾을 수 없습니다');
     }
 
-    const response = await apiClient.patch(
-      `/api/friends/requests/${friendshipId}/accept`
-    );
-    return unwrap<FriendRequestResponse>(response);
+    await apiClient.patch(`/api/friends/requests/${friendshipId}/accept`);
   },
 
   /** 보낸 요청 취소와 받은 요청 거절이 같은 엔드포인트다 */
