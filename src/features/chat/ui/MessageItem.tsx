@@ -1,12 +1,28 @@
-import { MessageResponse, PublishStatus } from '@/shared/types/api.types';
+'use client';
+
+import { useState } from 'react';
+import {
+  MessageResponse,
+  PreferredLanguage,
+  PublishStatus,
+} from '@/shared/types/api.types';
 
 interface MessageItemProps {
   message: MessageResponse;
   isOwn: boolean;
+  /** 내 선호 언어 — translations 에서 보여줄 번역문을 고르는 기준 */
+  myLanguage: PreferredLanguage;
   onRetry?: (message: MessageResponse) => void;
 }
 
-export function MessageItem({ message, isOwn, onRetry }: MessageItemProps) {
+export function MessageItem({
+  message,
+  isOwn,
+  myLanguage,
+  onRetry,
+}: MessageItemProps) {
+  const [showOriginal, setShowOriginal] = useState(false);
+
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('ko-KR', {
       hour: '2-digit',
@@ -22,6 +38,14 @@ export function MessageItem({ message, isOwn, onRetry }: MessageItemProps) {
    */
   const isPending = message.id < 0;
   const isFailed = message.publishStatus === PublishStatus.FAILED;
+
+  /*
+   * 번역은 "보낸 사람의 언어를 뺀" 참여자 언어만 채워진다.
+   * 내 언어 키가 없다 = 원문이 이미 내 언어이거나 번역이 실패한 경우라 원문을 그대로 보여준다.
+   * 내가 보낸 메시지에는 내 언어 번역이 있을 수 없으므로 원문만 쓴다.
+   */
+  const translated = isOwn ? undefined : message.translations?.[myLanguage];
+  const body = translated && !showOriginal ? translated : message.content;
 
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -47,10 +71,23 @@ export function MessageItem({ message, isOwn, onRetry }: MessageItemProps) {
                 : 'bg-gray-100 text-gray-800'
             } ${isPending ? 'opacity-60' : ''} ${isFailed ? 'ring-2 ring-red-400' : ''}`}
           >
-            <p className="text-sm">{message.content}</p>
+            <p className="text-sm">{body}</p>
           </div>
+
+          {translated && (
+            <button
+              type="button"
+              onClick={() => setShowOriginal((prev) => !prev)}
+              aria-expanded={showOriginal}
+              className="text-[11px] text-indigo-500 hover:text-indigo-600 mt-1 px-1 underline"
+            >
+              {showOriginal ? '번역문 보기' : '원문 보기'}
+            </button>
+          )}
+
           <p className="text-xs text-gray-400 mt-1 px-1">
             {isPending && '전송 중 · '}
+            {translated && !showOriginal && '번역됨 · '}
             {formatTime(message.createdAt)}
           </p>
           {isFailed && (

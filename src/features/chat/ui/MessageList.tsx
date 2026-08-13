@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { MessageResponse } from '@/shared/types/api.types';
+import { MessageResponse, PreferredLanguage } from '@/shared/types/api.types';
 import { MessageItem } from './MessageItem';
 
 interface MessageListProps {
   messages: MessageResponse[];
   currentUserNickname: string;
+  myLanguage: PreferredLanguage;
   isLoading: boolean;
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -17,6 +18,7 @@ interface MessageListProps {
 export function MessageList({
   messages,
   currentUserNickname,
+  myLanguage,
   isLoading,
   hasMore = false,
   isLoadingMore = false,
@@ -76,6 +78,7 @@ export function MessageList({
           key={message.clientMessageId || `id-${message.id}`}
           message={message}
           isOwn={message.senderNickname === currentUserNickname}
+          myLanguage={myLanguage}
           onRetry={onRetry}
         />
       ))}

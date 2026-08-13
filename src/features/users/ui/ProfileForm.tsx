@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { UserResponse } from '@/shared/types/api.types';
+import { PreferredLanguage, UserResponse } from '@/shared/types/api.types';
 import { userService } from '../service/userService';
 import { toErrorMessage } from '@/shared/api/client';
+import { LanguageSelect } from '@/shared/ui/LanguageSelect';
 
 interface ProfileFormProps {
   user: UserResponse;
@@ -14,6 +15,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
   const [formData, setFormData] = useState({
     nickname: user.nickname,
     profileImageUrl: user.profileImageUrl || '',
+    preferredLanguage: user.preferredLanguage ?? PreferredLanguage.KO,
   });
   const [passwordData, setPasswordData] = useState({
     password: '',
@@ -44,6 +46,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       const updated = await userService.updateProfile({
         nickname: formData.nickname,
         profileImageUrl: formData.profileImageUrl || null,
+        preferredLanguage: formData.preferredLanguage,
       });
       onUpdate(updated);
       setSuccess('프로필이 저장되었습니다!');
@@ -169,6 +172,25 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   이미지 파일의 주소를 입력하세요
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="preferredLanguage"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  사용 언어
+                </label>
+                <LanguageSelect
+                  id="preferredLanguage"
+                  value={formData.preferredLanguage}
+                  onChange={(preferredLanguage) =>
+                    setFormData((prev) => ({ ...prev, preferredLanguage }))
+                  }
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  다른 언어로 온 메시지를 이 언어로 번역해서 보여줍니다
                 </p>
               </div>
 

@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MessageResponse, PublishStatus } from '@/shared/types/api.types';
+import {
+  MessageResponse,
+  PreferredLanguage,
+  PublishStatus,
+} from '@/shared/types/api.types';
+import { readMyLanguage, readMyNickname } from '@/shared/lib/currentUser';
 import { chatService, toCursor } from '@/features/chat/service/chatService';
 import { MessageList } from '@/features/chat/ui/MessageList';
 import { ChatInput } from '@/features/chat/ui/ChatInput';
@@ -39,6 +44,7 @@ export default function ChatPage() {
 
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [currentUserNickname, setCurrentUserNickname] = useState('');
+  const [myLanguage, setMyLanguage] = useState(PreferredLanguage.KO);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -109,7 +115,8 @@ export default function ChatPage() {
         setMessages(msgs);
         setHasMore(msgs.length === PAGE_SIZE);
 
-        setCurrentUserNickname(localStorage.getItem('userNickname') || '');
+        setCurrentUserNickname(readMyNickname());
+        setMyLanguage(readMyLanguage());
       } catch (err) {
         setError(toErrorMessage(err, '채팅을 불러오지 못했습니다'));
       } finally {
@@ -214,6 +221,8 @@ export default function ChatPage() {
         senderNickname: currentUserNickname,
         clientMessageId,
         publishStatus: PublishStatus.PENDING,
+        // 번역은 서버가 저장하면서 채워 브로드캐스트로 되돌아온다
+        translations: {},
         createdAt: new Date().toISOString(),
       },
     ]);
@@ -314,6 +323,7 @@ export default function ChatPage() {
       <MessageList
         messages={messages}
         currentUserNickname={currentUserNickname}
+        myLanguage={myLanguage}
         isLoading={false}
         hasMore={hasMore}
         isLoadingMore={isLoadingMore}

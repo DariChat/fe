@@ -6,6 +6,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { authService } from '../service/authService';
 import { toErrorMessage } from '@/shared/api/client';
+import { PreferredLanguage } from '@/shared/types/api.types';
+import { LanguageSelect } from '@/shared/ui/LanguageSelect';
 
 export function SignupForm() {
   const router = useRouter();
@@ -15,6 +17,7 @@ export function SignupForm() {
     password: '',
     confirmPassword: '',
     nickname: '',
+    preferredLanguage: PreferredLanguage.KO,
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +44,7 @@ export function SignupForm() {
         email: formData.email,
         password: formData.password,
         nickname: formData.nickname,
+        preferredLanguage: formData.preferredLanguage,
       });
       router.push('/auth/login');
     } catch (err) {
@@ -124,6 +128,25 @@ export function SignupForm() {
               maxLength={20}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="preferredLanguage"
+              className="block text-sm font-medium text-gray-700"
+            >
+              사용 언어
+            </label>
+            <LanguageSelect
+              id="preferredLanguage"
+              value={formData.preferredLanguage}
+              onChange={(preferredLanguage) =>
+                setFormData((prev) => ({ ...prev, preferredLanguage }))
+              }
+            />
+            <p className="text-xs text-gray-500">
+              다른 언어로 온 메시지를 이 언어로 번역해서 보여드려요
+            </p>
           </div>
 
           <div className="space-y-2">

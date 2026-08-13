@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import { API_BASE_URL } from '@/shared/config/env';
 import { ApiResponse, ErrorResponse } from '@/shared/types/api.types';
+import { clearCurrentUser } from '@/shared/lib/currentUser';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -73,7 +74,7 @@ apiClient.interceptors.response.use(
       return apiClient(originalRequest);
     } catch (refreshError) {
       localStorage.removeItem('accessToken');
-      localStorage.removeItem('userNickname');
+      clearCurrentUser();
       window.location.href = '/auth/login';
       return Promise.reject(refreshError);
     }
