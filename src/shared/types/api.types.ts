@@ -29,6 +29,7 @@ export interface SignupRequest {
   email: string;
   password: string;
   nickname: string;
+  preferredLanguage?: PreferredLanguage;
 }
 
 /** 로그인/재발급 시 refreshToken 은 HttpOnly 쿠키로만 내려오고 바디에는 null 이 담긴다 */
@@ -38,21 +39,67 @@ export interface TokenResponse {
 }
 
 // 사용자
+
+/** 서버가 번역 대상 언어를 고르는 기준 (User.preferredLanguage) */
+export enum PreferredLanguage {
+  KO = 'KO',
+  EN = 'EN',
+  JA = 'JA',
+  ZH = 'ZH',
+}
+
+export const LANGUAGE_LABELS: Record<PreferredLanguage, string> = {
+  [PreferredLanguage.KO]: '한국어',
+  [PreferredLanguage.EN]: 'English',
+  [PreferredLanguage.JA]: '日本語',
+  [PreferredLanguage.ZH]: '中文',
+};
+
 export interface UserResponse {
   name: string;
   email: string;
   nickname: string;
   profileImageUrl: string | null;
+  preferredLanguage: PreferredLanguage;
   lastActiveAt: string;
 }
 
 export interface UserUpdateRequest {
   nickname: string;
   profileImageUrl?: string | null;
+  preferredLanguage?: PreferredLanguage;
 }
 
 export interface PasswordUpdateRequest {
   password: string;
+}
+
+/** GET /api/users/search 결과. 커서는 마지막 항목의 nickname 문자열이다. */
+export interface UserSearchResponse {
+  id: number;
+  nickname: string;
+  profileImageUrl: string | null;
+}
+
+// 친구
+export enum FriendshipStatus {
+  PENDING = 'PENDING',
+  ACCEPTED = 'ACCEPTED',
+}
+
+export interface FriendResponse {
+  userId: number;
+  nickname: string;
+  profileImageUrl: string | null;
+}
+
+export interface FriendRequestResponse {
+  friendshipId: number;
+  requesterId: number;
+  requesterNickname: string;
+  requesterProfileImageUrl: string | null;
+  status: FriendshipStatus;
+  createdAt: string;
 }
 
 // 채팅방
@@ -98,12 +145,18 @@ export interface ChatMessageRequest {
   clientMessageId: string;
 }
 
+/**
+ * translations 는 방 참여자들의 선호 언어 중 "보낸 사람의 언어를 뺀" 것만 채워진다.
+ * 즉 내 언어 키가 없으면 원문이 이미 내 언어이거나 번역이 실패한 것이므로 content 를 그대로 쓴다.
+ * (MessageService.translateForRoomMembers 참고)
+ */
 export interface MessageResponse {
   id: number;
   content: string;
   senderNickname: string;
   clientMessageId: string;
   publishStatus: PublishStatus;
+  translations: Partial<Record<PreferredLanguage, string>>;
   createdAt: string;
 }
 

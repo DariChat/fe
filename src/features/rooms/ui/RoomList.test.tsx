@@ -22,7 +22,7 @@ describe('RoomList', () => {
 
     expect(await screen.findByText('이서연')).toBeInTheDocument();
     expect(screen.getByText('프로젝트 팀')).toBeInTheDocument();
-    expect(screen.getAllByRole('link')).toHaveLength(4);
+    expect(screen.getAllByRole('link')).toHaveLength(5);
   });
 
   it('각 방은 /chat/{roomId} 로 연결된다 (main 세그먼트 없음)', async () => {
@@ -47,7 +47,7 @@ describe('RoomList', () => {
     render(<RoomList />);
     await screen.findByText('이서연');
 
-    // mockRooms 기준 unreadCount 는 2, 0, 1, 0
+    // mockRooms 기준 unreadCount 는 2, 0, 1, 0, 0
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument();
     expect(screen.queryByText('0')).not.toBeInTheDocument();

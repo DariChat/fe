@@ -4,6 +4,11 @@ import {
   MessageResponse,
   PublishStatus,
   TokenResponse,
+  PreferredLanguage,
+  UserSearchResponse,
+  FriendResponse,
+  FriendRequestResponse,
+  FriendshipStatus,
 } from '@/shared/types/api.types';
 
 export const mockUser: UserResponse = {
@@ -11,6 +16,7 @@ export const mockUser: UserResponse = {
   email: 'minsu@example.com',
   nickname: '민수',
   profileImageUrl: null,
+  preferredLanguage: PreferredLanguage.KO,
   lastActiveAt: new Date().toISOString(),
 };
 
@@ -21,13 +27,15 @@ const sent = (
   id: number,
   content: string,
   senderNickname: string,
-  createdAt: string
+  createdAt: string,
+  translations: MessageResponse['translations'] = {}
 ): MessageResponse => ({
   id,
   content,
   senderNickname,
   clientMessageId: `mock-${id}`,
   publishStatus: PublishStatus.PUBLISHED,
+  translations,
   createdAt,
 });
 
@@ -67,6 +75,19 @@ export const mockMessagesByRoom: Record<number, MessageResponse[]> = {
     sent(401, '채팅 버블 색상 시안 3개 올렸습니다.', '수진', minutesAgo(45)),
     sent(402, '2번이 제일 눈에 잘 들어오네요.', '민수', minutesAgo(30)),
   ],
+
+  // 5: Emily (1:1) — 상대가 EN, 내가 KO 라 번역이 함께 내려오는 방
+  5: [
+    sent(501, 'Hey! Did you get a chance to review the draft?', 'Emily', minutesAgo(25), {
+      [PreferredLanguage.KO]: '안녕! 초안 검토해 볼 시간 있었어?',
+    }),
+    sent(502, '네, 오늘 저녁까지 코멘트 남길게요.', '민수', minutesAgo(20), {
+      [PreferredLanguage.EN]: "Yes, I'll leave comments by this evening.",
+    }),
+    sent(503, 'Perfect, thanks a lot!', 'Emily', minutesAgo(15), {
+      [PreferredLanguage.KO]: '완벽해요, 정말 고마워요!',
+    }),
+  ],
 };
 
 /** 정의되지 않은 방은 빈 대화로 시작한다 (빈 대화 화면 확인용) */
@@ -84,11 +105,57 @@ export const mockRooms: RoomSummaryResponse[] = [
   { roomId: 2, roomName: '프로젝트 팀', memberCount: 5, unreadCount: 0 },
   { roomId: 3, roomName: '박준호', memberCount: 2, unreadCount: 1 },
   { roomId: 4, roomName: '디자인 논의', memberCount: 3, unreadCount: 0 },
+  { roomId: 5, roomName: 'Emily', memberCount: 2, unreadCount: 0 },
 ].map((room) => ({
   ...room,
   lastMessage: lastOf(room.roomId)?.content ?? null,
   lastMessageAt: lastOf(room.roomId)?.createdAt ?? null,
 }));
+
+/** GET /api/friends */
+export const mockFriends: FriendResponse[] = [
+  { userId: 11, nickname: '서연', profileImageUrl: null },
+  { userId: 12, nickname: '준호', profileImageUrl: null },
+  { userId: 13, nickname: 'Emily', profileImageUrl: null },
+];
+
+/** GET /api/friends/requests/received */
+export const mockFriendRequests: FriendRequestResponse[] = [
+  {
+    friendshipId: 101,
+    requesterId: 21,
+    requesterNickname: '지원',
+    requesterProfileImageUrl: null,
+    status: FriendshipStatus.PENDING,
+    createdAt: minutesAgo(120),
+  },
+  {
+    friendshipId: 102,
+    requesterId: 22,
+    requesterNickname: '태양',
+    requesterProfileImageUrl: null,
+    status: FriendshipStatus.PENDING,
+    createdAt: minutesAgo(600),
+  },
+];
+
+/** GET /api/users/search — 닉네임 부분일치, 본인 제외를 흉내낸다 */
+const mockSearchPool: UserSearchResponse[] = [
+  { id: 11, nickname: '서연', profileImageUrl: null },
+  { id: 12, nickname: '준호', profileImageUrl: null },
+  { id: 13, nickname: 'Emily', profileImageUrl: null },
+  { id: 21, nickname: '지원', profileImageUrl: null },
+  { id: 22, nickname: '태양', profileImageUrl: null },
+  { id: 23, nickname: '수진', profileImageUrl: null },
+  { id: 24, nickname: 'Kenji', profileImageUrl: null },
+];
+
+export const searchMockUsers = (keyword: string): UserSearchResponse[] =>
+  mockSearchPool.filter(
+    (user) =>
+      user.nickname !== mockUser.nickname &&
+      user.nickname.toLowerCase().includes(keyword.trim().toLowerCase())
+  );
 
 export const mockTokenResponse: TokenResponse = {
   accessToken: 'mock_access_token_' + Math.random().toString(36),

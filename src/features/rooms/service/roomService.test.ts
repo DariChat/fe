@@ -20,7 +20,7 @@ describe('roomService (mock 모드)', () => {
     const rooms = await roomService.getMyRooms();
 
     expect(rooms).toEqual(mockRooms);
-    expect(rooms).toHaveLength(4);
+    expect(rooms).toHaveLength(5);
   });
 
   it('mock 모드에서는 실제 API 를 호출하지 않는다', async () => {

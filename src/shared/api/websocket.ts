@@ -188,6 +188,8 @@ export const sendChatMessage = (
       senderNickname: localStorage.getItem('userNickname') || '민수',
       clientMessageId,
       publishStatus: PublishStatus.PUBLISHED,
+      // 내가 보낸 메시지에는 내 언어 번역이 붙지 않으므로 mock 도 비워 둔다
+      translations: {},
       createdAt: new Date().toISOString(),
     };
     mockSentMessages.set(clientMessageId, echoed);
