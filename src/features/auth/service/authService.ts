@@ -8,6 +8,7 @@ import {
 import { mockTokenResponse, mockUser } from '@/shared/api/mockData';
 import { USE_MOCK } from '@/shared/config/env';
 import { useRoomsStore } from '@/features/rooms/model/roomsStore';
+import { useFriendsStore } from '@/features/friends/model/friendsStore';
 import { cacheCurrentUser, clearCurrentUser } from '@/shared/lib/currentUser';
 
 /** refreshToken 은 HttpOnly 쿠키로만 관리된다 (바디에는 null 이 온다) */
@@ -73,8 +74,9 @@ export const authService = {
     localStorage.removeItem('refreshToken');
     clearCurrentUser();
 
-    // 페이지 이동만으로는 메모리에 남은 방 목록이 지워지지 않아
+    // 페이지 이동만으로는 메모리에 남은 목록이 지워지지 않아
     // 다른 계정으로 로그인하면 이전 사용자의 목록이 잠깐 보인다
     useRoomsStore.getState().reset();
+    useFriendsStore.getState().reset();
   },
 };
