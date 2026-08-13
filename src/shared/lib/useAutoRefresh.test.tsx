@@ -1,8 +1,14 @@
 import { act, render } from '@testing-library/react';
 import { useAutoRefresh } from './useAutoRefresh';
 
-function Probe({ refresh }: { refresh: () => void }) {
-  useAutoRefresh(refresh, { intervalMs: 1000 });
+function Probe({
+  refresh,
+  enabled = true,
+}: {
+  refresh: () => void;
+  enabled?: boolean;
+}) {
+  useAutoRefresh(refresh, { intervalMs: 1000, enabled });
   return null;
 }
 
@@ -63,6 +69,26 @@ describe('useAutoRefresh', () => {
     });
 
     expect(refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it('enabled 가 false 면 아무 요청도 보내지 않는다', () => {
+    const refresh = jest.fn();
+    render(<Probe refresh={refresh} enabled={false} />);
+
+    act(() => {
+      jest.advanceTimersByTime(5000);
+    });
+
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it('숨어 있던 목록이 화면에 나타나면 그때 불러온다', () => {
+    const refresh = jest.fn();
+    const { rerender } = render(<Probe refresh={refresh} enabled={false} />);
+
+    rerender(<Probe refresh={refresh} enabled />);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 
   it('화면을 벗어나면 타이머를 정리한다', () => {

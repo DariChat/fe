@@ -19,13 +19,19 @@ import { useEffect, useRef } from 'react';
  */
 export const useAutoRefresh = (
   refresh: () => void,
-  { intervalMs = 8000 }: { intervalMs?: number } = {}
+  {
+    intervalMs = 10000,
+    enabled = true,
+  }: { intervalMs?: number; enabled?: boolean } = {}
 ) => {
   // 콜백이 매 렌더 새로 만들어져도 타이머를 다시 걸지 않도록 참조만 갱신한다
   const refreshRef = useRef(refresh);
   refreshRef.current = refresh;
 
   useEffect(() => {
+    // 화면에 안 보이는 목록은 받아봐야 아무도 읽지 않는다
+    if (!enabled) return;
+
     const run = () => refreshRef.current();
 
     run();
@@ -45,5 +51,5 @@ export const useAutoRefresh = (
       window.removeEventListener('focus', runIfVisible);
       document.removeEventListener('visibilitychange', runIfVisible);
     };
-  }, [intervalMs]);
+  }, [intervalMs, enabled]);
 };
