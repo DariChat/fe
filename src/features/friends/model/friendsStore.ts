@@ -50,7 +50,12 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       ]);
       set({ friends, requests, hasLoaded: true });
     } catch (err) {
-      set({ error: toErrorMessage(err, '친구 정보를 불러오지 못했습니다') });
+      // 주기적 갱신이 한 번 실패했다고 이미 보고 있던 목록을 에러 화면으로 덮지 않는다
+      if (get().hasLoaded) {
+        console.warn('친구 정보 갱신 실패, 이전 목록을 유지합니다', err);
+      } else {
+        set({ error: toErrorMessage(err, '친구 정보를 불러오지 못했습니다') });
+      }
     } finally {
       set({ isLoading: false });
     }

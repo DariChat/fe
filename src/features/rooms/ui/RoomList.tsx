@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAutoRefresh } from '@/shared/lib/useAutoRefresh';
 import { useRoomsStore } from '../model/roomsStore';
 import { CreateRoomModal } from './CreateRoomModal';
 
@@ -33,9 +34,15 @@ export function RoomList() {
 
   const [isCreating, setIsCreating] = useState(false);
 
-  useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
+  /*
+   * 남이 나를 새 방에 초대해도, 다른 방에 메시지가 쌓여도 알림이 오지 않는다.
+   * (WebSocket 은 지금 보고 있는 방의 메시지만 밀어준다)
+   */
+  useAutoRefresh(
+    useCallback(() => {
+      fetchRooms({ force: true });
+    }, [fetchRooms])
+  );
 
   const handleCreated = (roomId: number) => {
     setIsCreating(false);
