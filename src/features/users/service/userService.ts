@@ -1,11 +1,16 @@
 import { apiClient, unwrap } from '@/shared/api/client';
 import {
   PasswordUpdateRequest,
+  UserRecommendationResponse,
   UserResponse,
   UserSearchResponse,
   UserUpdateRequest,
 } from '@/shared/types/api.types';
-import { mockUser, searchMockUsers } from '@/shared/api/mockData';
+import {
+  mockUser,
+  recommendMockUsers,
+  searchMockUsers,
+} from '@/shared/api/mockData';
 import { USE_MOCK } from '@/shared/config/env';
 import { cacheCurrentUser } from '@/shared/lib/currentUser';
 
@@ -65,6 +70,30 @@ export const userService = {
       params: { keyword, size, ...(cursor && { cursor }) },
     });
     return unwrap<UserSearchResponse[]>(response);
+  },
+
+  /**
+   * 홈 추천 유저 — 나와 다른 언어를 쓰고 아직 친구·요청 관계가 아닌 사람을 서버가 무작위로 고른다.
+   *
+   * 무작위라 커서를 쓸 수 없어서, 지금까지 받은 id 를 전부 넘겨 중복을 막는다.
+   * 쿼리는 excludeIds=1&excludeIds=2 형태여야 한다 — axios 기본 직렬화(excludeIds[]=1)로는
+   * 스프링이 List<Long> 에 바인딩하지 못해 직접 만든다.
+   */
+  async getRecommendations(
+    excludeIds: number[] = [],
+    size: number = 20
+  ): Promise<UserRecommendationResponse[]> {
+    if (USE_MOCK) {
+      return recommendMockUsers(excludeIds, size);
+    }
+
+    const query = new URLSearchParams({ size: String(size) });
+    excludeIds.forEach((id) => query.append('excludeIds', String(id)));
+
+    const response = await apiClient.get(
+      `/api/users/recommendations?${query.toString()}`
+    );
+    return unwrap<UserRecommendationResponse[]>(response);
   },
 };
 

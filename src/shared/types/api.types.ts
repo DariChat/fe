@@ -61,15 +61,24 @@ export interface UserResponse {
   email: string;
   nickname: string;
   profileImageUrl: string | null;
+  /** 자기소개 (최대 200자) */
+  bio: string | null;
   preferredLanguage: PreferredLanguage;
   lastActiveAt: string;
 }
 
-/** nickname · preferredLanguage 는 서버에서 필수다 (profileImageUrl 만 선택) */
+/**
+ * nickname · preferredLanguage 는 서버에서 필수다 (나머지는 선택).
+ *
+ * 서버는 받은 값으로 프로필을 통째로 덮어쓴다 — bio 를 빼고 보내면 기존 자기소개가 지워진다.
+ * 수정 화면은 항상 현재 값을 채워서 보낸다.
+ */
 export interface UserUpdateRequest {
   nickname: string;
   profileImageUrl?: string | null;
   preferredLanguage: PreferredLanguage;
+  /** 최대 200자 (@Size(max = 200)) */
+  bio?: string | null;
 }
 
 export interface PasswordUpdateRequest {
@@ -81,6 +90,21 @@ export interface UserSearchResponse {
   id: number;
   nickname: string;
   profileImageUrl: string | null;
+}
+
+/**
+ * GET /api/users/recommendations — 홈 추천 유저.
+ *
+ * 서버가 "나와 다른 언어를 쓰고, 아직 친구도 요청 관계도 아닌" 사람을 무작위로 골라준다.
+ * 무작위라 커서 페이징이 불가능해서, 이미 받은 id 를 excludeIds 로 계속 넘겨 중복을 막는다.
+ * (검색 결과와 달리 userId 라는 이름을 쓰고 자기소개·언어가 함께 온다)
+ */
+export interface UserRecommendationResponse {
+  userId: number;
+  nickname: string;
+  profileImageUrl: string | null;
+  bio: string | null;
+  preferredLanguage: PreferredLanguage;
 }
 
 // 친구

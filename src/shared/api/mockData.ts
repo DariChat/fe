@@ -6,6 +6,7 @@ import {
   TokenResponse,
   PreferredLanguage,
   UserSearchResponse,
+  UserRecommendationResponse,
   FriendResponse,
   FriendRequestResponse,
   FriendshipStatus,
@@ -16,6 +17,7 @@ export const mockUser: UserResponse = {
   email: 'minsu@example.com',
   nickname: '민수',
   profileImageUrl: null,
+  bio: '프론트엔드 개발자예요. 영어와 일본어로 대화 연습하고 싶습니다.',
   preferredLanguage: PreferredLanguage.KO,
   lastActiveAt: new Date().toISOString(),
 };
@@ -156,6 +158,65 @@ export const searchMockUsers = (keyword: string): UserSearchResponse[] =>
       user.nickname !== mockUser.nickname &&
       user.nickname.toLowerCase().includes(keyword.trim().toLowerCase())
   );
+
+/**
+ * GET /api/users/recommendations
+ * 서버는 "나와 다른 언어를 쓰고 아직 친구가 아닌" 사람만 골라준다 —
+ * mock 도 내 언어(KO)가 아닌 사람들로만 채운다.
+ */
+const mockRecommendationPool: UserRecommendationResponse[] = [
+  {
+    userId: 31,
+    nickname: 'Emma',
+    profileImageUrl: null,
+    bio: 'Learning Korean for two years. Happy to help with English!',
+    preferredLanguage: PreferredLanguage.EN,
+  },
+  {
+    userId: 32,
+    nickname: 'Kenji',
+    profileImageUrl: null,
+    bio: '韓国のドラマが好きです。韓国語を勉強しています。',
+    preferredLanguage: PreferredLanguage.JA,
+  },
+  {
+    userId: 33,
+    nickname: 'Wei',
+    profileImageUrl: null,
+    bio: '你好！我在学韩语，希望能交到韩国朋友。',
+    preferredLanguage: PreferredLanguage.ZH,
+  },
+  {
+    userId: 34,
+    nickname: 'Lucas',
+    profileImageUrl: null,
+    bio: 'Backend engineer in Berlin. Coffee, climbing, and code.',
+    preferredLanguage: PreferredLanguage.EN,
+  },
+  {
+    userId: 35,
+    nickname: 'Yuki',
+    profileImageUrl: null,
+    bio: null,
+    preferredLanguage: PreferredLanguage.JA,
+  },
+  {
+    userId: 36,
+    nickname: 'Sophia',
+    profileImageUrl: null,
+    bio: 'Designer. I love learning about other cultures through chat.',
+    preferredLanguage: PreferredLanguage.EN,
+  },
+];
+
+/** 서버처럼 이미 받은 id 를 빼고 돌려준다 (무작위 정렬까지 흉내낼 필요는 없다) */
+export const recommendMockUsers = (
+  excludeIds: number[],
+  size: number
+): UserRecommendationResponse[] =>
+  mockRecommendationPool
+    .filter((user) => !excludeIds.includes(user.userId))
+    .slice(0, size);
 
 export const mockTokenResponse: TokenResponse = {
   accessToken: 'mock_access_token_' + Math.random().toString(36),

@@ -1,7 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { UserSearchResponse } from '@/shared/types/api.types';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  LANGUAGE_LABELS,
+  UserRecommendationResponse,
+  UserSearchResponse,
+} from '@/shared/types/api.types';
 import { toErrorMessage } from '@/shared/api/client';
 import { toUserCursor, userService } from '@/features/users/service/userService';
 import { SearchIcon } from '@/shared/ui/icons';
@@ -9,6 +13,7 @@ import { useFriendsStore } from '../model/friendsStore';
 import { FriendAvatar } from './FriendAvatar';
 
 const PAGE_SIZE = 20;
+const RECOMMEND_PAGE_SIZE = 10;
 
 interface UserSearchPanelProps {
   onError: (message: string) => void;
@@ -26,6 +31,49 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
   const [hasMore, setHasMore] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [sendingId, setSendingId] = useState<number | null>(null);
+
+  /*
+   * 추천은 서버가 무작위로 고르기 때문에 커서를 쓸 수 없다.
+   * 지금까지 받은 id 를 전부 넘겨 중복을 막는 방식이라 목록 자체가 커서 역할을 한다.
+   */
+  const [recommendations, setRecommendations] = useState<
+    UserRecommendationResponse[]
+  >([]);
+  const [isRecommendLoading, setIsRecommendLoading] = useState(true);
+  /** 더 받아올 사람이 없는 상태 (요청한 만큼 못 받아오면 바닥이다) */
+  const [isRecommendExhausted, setIsRecommendExhausted] = useState(false);
+
+  const loadRecommendations = useCallback(
+    async (exclude: number[]) => {
+      setIsRecommendLoading(true);
+      try {
+        const more = await userService.getRecommendations(
+          exclude,
+          RECOMMEND_PAGE_SIZE
+        );
+        /*
+         * 서버가 무작위로 고르는 데다 첫 조회가 두 번 돌 수도 있어(개발 모드의 이중 실행 등)
+         * 같은 사람이 두 번 들어올 수 있다. 붙일 때 id 로 한 번 걸러낸다.
+         */
+        setRecommendations((prev) => {
+          const seen = new Set(prev.map((user) => user.userId));
+          return [...prev, ...more.filter((user) => !seen.has(user.userId))];
+        });
+        setIsRecommendExhausted(more.length < RECOMMEND_PAGE_SIZE);
+      } catch (err) {
+        // 추천은 덤이므로 실패해도 검색은 그대로 쓸 수 있어야 한다
+        console.warn('추천 유저를 불러오지 못했습니다', err);
+        setIsRecommendExhausted(true);
+      } finally {
+        setIsRecommendLoading(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    loadRecommendations([]);
+  }, [loadRecommendations]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,16 +114,23 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
     }
   };
 
-  const isFriend = (user: UserSearchResponse) =>
-    friends.some((friend) => friend.userId === user.id);
+  const clearSearch = () => {
+    setKeyword('');
+    setResults([]);
+    setHasSearched(false);
+    setHasMore(false);
+  };
 
-  const isRequested = (user: UserSearchResponse) =>
-    sentRequests.some((sent) => sent.userId === user.id);
+  const isFriend = (userId: number) =>
+    friends.some((friend) => friend.userId === userId);
 
-  const handleSend = async (user: UserSearchResponse) => {
-    setSendingId(user.id);
+  const isRequested = (userId: number) =>
+    sentRequests.some((sent) => sent.userId === userId);
+
+  const handleSend = async (userId: number) => {
+    setSendingId(userId);
     try {
-      await sendRequest(user.id);
+      await sendRequest(userId);
     } catch (err) {
       // 같은 방향으로 이미 요청했거나 친구면 서버가 409 로 막는다
       onError(toErrorMessage(err, '친구 요청을 보내지 못했습니다'));
@@ -85,10 +140,10 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
   };
 
   /** 보낸 요청 취소 — 거절과 같은 엔드포인트다 */
-  const handleCancel = async (user: UserSearchResponse) => {
-    setSendingId(user.id);
+  const handleCancel = async (userId: number) => {
+    setSendingId(userId);
     try {
-      await cancelRequest(user.id);
+      await cancelRequest(userId);
     } catch (err) {
       onError(toErrorMessage(err, '요청을 취소하지 못했습니다'));
     } finally {
@@ -96,11 +151,28 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
     }
   };
 
-  const labelFor = (user: UserSearchResponse) => {
-    if (isFriend(user)) return '친구';
-    if (sendingId === user.id) return '처리 중...';
-    return isRequested(user) ? '요청 취소' : '친구 요청';
+  const labelFor = (userId: number) => {
+    if (isFriend(userId)) return '친구';
+    if (sendingId === userId) return '처리 중...';
+    return isRequested(userId) ? '요청 취소' : '친구 요청';
   };
+
+  const requestButton = (userId: number) => (
+    <button
+      type="button"
+      onClick={() =>
+        isRequested(userId) ? handleCancel(userId) : handleSend(userId)
+      }
+      disabled={isFriend(userId) || sendingId === userId}
+      className={`shrink-0 px-3 py-1.5 text-sm font-medium border rounded-lg transition disabled:opacity-50 ${
+        isRequested(userId)
+          ? 'text-ink-muted border-line hover:bg-surface-3'
+          : 'text-accent-ink border-line hover:bg-accent-soft'
+      }`}
+    >
+      {labelFor(userId)}
+    </button>
+  );
 
   return (
     <div className="space-y-4">
@@ -125,49 +197,116 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
         </button>
       </form>
 
-      {hasSearched && results.length === 0 && !isSearching && (
-        <p className="text-center text-sm text-ink-muted py-12">
-          검색 결과가 없어요
-        </p>
-      )}
+      {hasSearched ? (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-ink-muted">
+              검색 결과 {results.length}명
+            </p>
+            <button
+              type="button"
+              onClick={clearSearch}
+              className="text-sm font-medium text-accent-ink hover:underline"
+            >
+              추천 목록으로
+            </button>
+          </div>
 
-      <ul className="space-y-0.5">
-        {results.map((user) => (
-          <li
-            key={user.id}
-            className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-2 transition"
-          >
-            <FriendAvatar nickname={user.nickname} size="sm" />
-            <span className="flex-1 min-w-0 font-medium truncate">
-              {user.nickname}
-            </span>
+          {results.length === 0 && !isSearching && (
+            <p className="text-center text-sm text-ink-muted py-12">
+              검색 결과가 없어요
+            </p>
+          )}
+
+          <ul className="space-y-0.5">
+            {results.map((user) => (
+              <li
+                key={user.id}
+                className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-2 transition"
+              >
+                <FriendAvatar nickname={user.nickname} size="sm" />
+                <span className="flex-1 min-w-0 font-medium truncate">
+                  {user.nickname}
+                </span>
+                {requestButton(user.id)}
+              </li>
+            ))}
+          </ul>
+
+          {hasMore && (
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              disabled={isSearching}
+              className="w-full py-2 text-sm font-medium text-accent-ink hover:bg-accent-soft rounded-lg transition disabled:opacity-50"
+            >
+              {isSearching ? '불러오는 중...' : '더 보기'}
+            </button>
+          )}
+        </>
+      ) : (
+        <>
+          <div>
+            <h2 className="text-sm font-semibold">이런 사람은 어때요?</h2>
+            <p className="text-xs text-ink-muted mt-0.5">
+              나와 다른 언어를 쓰는 사람들이에요. 번역은 자동으로 됩니다.
+            </p>
+          </div>
+
+          {recommendations.length === 0 && isRecommendLoading && (
+            <p className="text-center text-sm text-ink-muted py-12">
+              추천을 불러오는 중...
+            </p>
+          )}
+
+          {recommendations.length === 0 && !isRecommendLoading && (
+            <p className="text-center text-sm text-ink-muted py-12">
+              지금은 추천할 사람이 없어요. 닉네임으로 직접 찾아보세요.
+            </p>
+          )}
+
+          <ul className="space-y-2">
+            {recommendations.map((user) => (
+              <li
+                key={user.userId}
+                className="flex items-start gap-3 p-3 border border-line rounded-xl hover:bg-surface-2 transition"
+              >
+                <FriendAvatar nickname={user.nickname} size="sm" />
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium truncate">
+                      {user.nickname}
+                    </span>
+                    <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-surface-2 text-[11px] font-medium text-ink-muted">
+                      {LANGUAGE_LABELS[user.preferredLanguage]}
+                    </span>
+                  </div>
+                  {user.bio && (
+                    <p className="text-[13px] text-ink-muted mt-1 line-clamp-2">
+                      {user.bio}
+                    </p>
+                  )}
+                </div>
+
+                {requestButton(user.userId)}
+              </li>
+            ))}
+          </ul>
+
+          {recommendations.length > 0 && !isRecommendExhausted && (
             <button
               type="button"
               onClick={() =>
-                isRequested(user) ? handleCancel(user) : handleSend(user)
+                loadRecommendations(recommendations.map((user) => user.userId))
               }
-              disabled={isFriend(user) || sendingId === user.id}
-              className={`shrink-0 px-3 py-1.5 text-sm font-medium border rounded-lg transition disabled:opacity-50 ${
-                isRequested(user)
-                  ? 'text-ink-muted border-line hover:bg-surface-3'
-                  : 'text-accent-ink border-line hover:bg-accent-soft'
-              }`}
+              disabled={isRecommendLoading}
+              className="w-full py-2 text-sm font-medium text-accent-ink hover:bg-accent-soft rounded-lg transition disabled:opacity-50"
             >
-              {labelFor(user)}
+              {isRecommendLoading ? '불러오는 중...' : '다른 사람 더 보기'}
             </button>
-          </li>
-        ))}
-      </ul>
-
-      {hasMore && (
-        <button
-          type="button"
-          onClick={handleLoadMore}
-          disabled={isSearching}
-          className="w-full py-2 text-sm font-medium text-accent-ink hover:bg-accent-soft rounded-lg transition disabled:opacity-50"
-        >
-          {isSearching ? '불러오는 중...' : '더 보기'}
-        </button>
+          )}
+        </>
       )}
     </div>
   );

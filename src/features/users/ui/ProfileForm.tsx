@@ -12,13 +12,21 @@ interface ProfileFormProps {
   onUpdate: (user: UserResponse) => void;
 }
 
+/** 서버 @Size(max = 200) 와 같은 값 — 넘겨 보내면 400 이 온다 */
+const BIO_MAX_LENGTH = 200;
+
 const FIELD_CLASS =
   'w-full h-11 px-4 bg-surface-2 rounded-xl text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition';
 
 export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
+  /*
+   * 서버는 받은 값으로 프로필을 통째로 덮어쓴다.
+   * bio 를 빼고 보내면 기존 자기소개가 지워지므로 현재 값을 반드시 채워 둔다.
+   */
   const [formData, setFormData] = useState({
     nickname: user.nickname,
     profileImageUrl: user.profileImageUrl || '',
+    bio: user.bio || '',
     preferredLanguage: user.preferredLanguage ?? PreferredLanguage.KO,
   });
   const [passwordData, setPasswordData] = useState({
@@ -30,7 +38,9 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -50,6 +60,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       const updated = await userService.updateProfile({
         nickname: formData.nickname,
         profileImageUrl: formData.profileImageUrl || null,
+        bio: formData.bio.trim() || null,
         preferredLanguage: formData.preferredLanguage,
       });
       onUpdate(updated);
@@ -155,6 +166,30 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                   maxLength={20}
                   className={FIELD_CLASS}
                 />
+              </div>
+
+              <div>
+                <div className="flex items-baseline justify-between mb-2">
+                  <label htmlFor="bio" className="text-sm font-medium">
+                    자기소개
+                  </label>
+                  <span className="text-xs text-ink-subtle">
+                    {formData.bio.length}/{BIO_MAX_LENGTH}
+                  </span>
+                </div>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleProfileChange}
+                  maxLength={BIO_MAX_LENGTH}
+                  rows={3}
+                  placeholder="어떤 이야기를 나누고 싶은지 적어 보세요"
+                  className="w-full px-4 py-3 bg-surface-2 rounded-xl text-sm leading-relaxed resize-none placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition"
+                />
+                <p className="text-xs text-ink-subtle mt-1.5">
+                  추천 목록에서 다른 사람에게 함께 보입니다
+                </p>
               </div>
 
               <div>

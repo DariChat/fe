@@ -152,6 +152,12 @@ export function RoomList() {
             >
               새 대화 시작
             </button>
+            <Link
+              href="/friends"
+              className="block mt-2 text-sm font-medium text-accent-ink hover:underline"
+            >
+              추천 친구 둘러보기
+            </Link>
           </div>
         </div>
       ) : visibleRooms.length === 0 ? (
