@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { UserEvent } from '@testing-library/user-event';
 import { RoomList } from './RoomList';
 
 const push = jest.fn();
@@ -70,11 +71,32 @@ describe('RoomList', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
+    /** 참여자는 id 입력이 아니라 친구 목록(mockFriends)에서 고른다 */
+    const pickFriend = async (user: UserEvent, nickname: string) =>
+      user.click(await screen.findByRole('button', { name: new RegExp(nickname) }));
+
+    it('참여자를 친구 목록에서 고른다 (id 입력이 아니다)', async () => {
+      await openModal();
+
+      expect(await screen.findByRole('button', { name: /서연/ })).toBeInTheDocument();
+      expect(screen.queryByLabelText('참여자 id')).not.toBeInTheDocument();
+    });
+
+    it('친구를 고르지 않으면 만들 수 없다', async () => {
+      const user = await openModal();
+      await screen.findByRole('button', { name: /서연/ });
+
+      await user.click(screen.getByRole('button', { name: '채팅방 만들기' }));
+
+      expect(screen.getByText('대화할 친구를 선택하세요')).toBeInTheDocument();
+      expect(push).not.toHaveBeenCalled();
+    });
+
     it('그룹 채팅은 방 이름 없이 만들 수 없다', async () => {
       const user = await openModal();
 
       await user.click(screen.getByRole('button', { name: '그룹 채팅' }));
-      await user.type(screen.getByLabelText('참여자 id'), '2, 3');
+      await pickFriend(user, '준호');
       await user.click(screen.getByRole('button', { name: '채팅방 만들기' }));
 
       expect(
@@ -83,23 +105,48 @@ describe('RoomList', () => {
       expect(push).not.toHaveBeenCalled();
     });
 
-    it('1:1 채팅은 참여자를 두 명 이상 지정할 수 없다', async () => {
+    it('1:1 은 한 명만 선택된다 — 다른 친구를 고르면 갈아끼운다', async () => {
       const user = await openModal();
 
-      await user.type(screen.getByLabelText('참여자 id'), '2, 3');
-      await user.click(screen.getByRole('button', { name: '채팅방 만들기' }));
+      await pickFriend(user, '서연');
+      await pickFriend(user, '준호');
 
-      expect(
-        screen.getByText('1:1 채팅은 참여자를 한 명만 지정할 수 있어요')
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /서연/ })).toHaveAttribute(
+        'aria-pressed',
+        'false'
+      );
+      expect(screen.getByRole('button', { name: /준호/ })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+    });
+
+    it('그룹 채팅은 여러 명을 고를 수 있다', async () => {
+      const user = await openModal();
+
+      await user.click(screen.getByRole('button', { name: '그룹 채팅' }));
+      await pickFriend(user, '서연');
+      await pickFriend(user, '준호');
+
+      expect(screen.getByText('2명 선택됨')).toBeInTheDocument();
+    });
+
+    it('닉네임으로 친구를 걸러낼 수 있다', async () => {
+      const user = await openModal();
+      await screen.findByRole('button', { name: /서연/ });
+
+      await user.type(screen.getByLabelText('친구 검색'), '준');
+
+      expect(screen.queryByRole('button', { name: /서연/ })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /준호/ })).toBeInTheDocument();
     });
 
     it('만들고 나면 목록 맨 위에 추가되고 그 방으로 이동한다', async () => {
       const user = await openModal();
 
-      // 1:1 일 때는 라벨에 '(선택)' 이 붙는다
-      await user.type(screen.getByLabelText(/방 이름/), '스터디');
-      await user.type(screen.getByLabelText('참여자 id'), '2');
+      await user.click(screen.getByRole('button', { name: '그룹 채팅' }));
+      await user.type(screen.getByLabelText('방 이름'), '스터디');
+      await pickFriend(user, '서연');
       await user.click(screen.getByRole('button', { name: '채팅방 만들기' }));
 
       expect(await screen.findByText('스터디')).toBeInTheDocument();

@@ -83,12 +83,20 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
   async createRoom(data) {
     const room = await roomService.createRoom(data);
 
-    set((state) => ({
-      rooms: [
-        toSummary(room),
-        ...state.rooms.filter((r) => r.roomId !== room.roomId),
-      ],
-    }));
+    set((state) => {
+      /*
+       * 1:1 은 이미 방이 있으면 서버가 그 방을 그대로 돌려준다 (alreadyExists).
+       * 이때 빈 요약으로 덮으면 대화가 오갔던 방의 마지막 메시지와 안 읽은 수가 사라진다.
+       */
+      const existing = state.rooms.find((r) => r.roomId === room.roomId);
+      const summary = existing
+        ? { ...existing, roomName: room.roomName, memberCount: room.memberCount }
+        : toSummary(room);
+
+      return {
+        rooms: [summary, ...state.rooms.filter((r) => r.roomId !== room.roomId)],
+      };
+    });
 
     return room;
   },

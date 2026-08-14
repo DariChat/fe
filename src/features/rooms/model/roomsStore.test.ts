@@ -1,5 +1,6 @@
 import { RoomEventType, RoomType } from '@/shared/types/api.types';
 import { mockRooms } from '@/shared/api/mockData';
+import { roomService } from '../service/roomService';
 import { useRoomsStore } from './roomsStore';
 
 const store = () => useRoomsStore.getState();
@@ -40,6 +41,33 @@ describe('roomsStore (mock 모드)', () => {
       roomName: '스터디',
       lastMessage: null,
       unreadCount: 0,
+    });
+  });
+
+  it('이미 있는 방을 다시 만들면 마지막 메시지·안읽음이 지워지지 않는다', async () => {
+    await store().fetchRooms({ force: true });
+    const existing = store().rooms.find((r) => r.lastMessage)!;
+
+    // 서버는 같은 1:1 방을 새로 만들지 않고 기존 방을 그대로 돌려준다
+    jest
+      .spyOn(roomService, 'createRoom')
+      .mockResolvedValueOnce({
+        roomId: existing.roomId,
+        roomName: existing.roomName,
+        roomType: RoomType.DIRECT,
+        memberCount: existing.memberCount,
+        alreadyExists: true,
+      });
+
+    await store().createRoom({
+      roomType: RoomType.DIRECT,
+      memberIds: [2],
+    });
+
+    expect(store().rooms[0]).toMatchObject({
+      roomId: existing.roomId,
+      lastMessage: existing.lastMessage,
+      unreadCount: existing.unreadCount,
     });
   });
 

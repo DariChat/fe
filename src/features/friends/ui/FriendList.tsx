@@ -14,34 +14,21 @@ interface FriendListProps {
 
 export function FriendList({ friends, onError }: FriendListProps) {
   const router = useRouter();
-  const rooms = useRoomsStore((state) => state.rooms);
   const fetchRooms = useRoomsStore((state) => state.fetchRooms);
   const createRoom = useRoomsStore((state) => state.createRoom);
 
   const [openingUserId, setOpeningUserId] = useState<number | null>(null);
 
   /**
-   * 서버는 DIRECT 방을 중복 검사 없이 매번 새로 만들고, 이름은 상대 닉네임으로 붙인다.
-   * 누를 때마다 같은 상대와의 방이 늘어나지 않도록
-   * 2명짜리 + 같은 이름의 방이 이미 있으면 그 방으로 들어간다.
+   * 같은 상대와의 DIRECT 방은 서버가 중복해서 만들지 않고 기존 방을 돌려준다
+   * (RoomResponse.alreadyExists / 응답 코드 200). 그래서 프론트가 미리 찾아볼 필요가 없다.
    */
-  const findDirectRoom = (friend: FriendResponse) =>
-    rooms.find(
-      (room) => room.memberCount === 2 && room.roomName === friend.nickname
-    );
-
   const handleOpenChat = async (friend: FriendResponse) => {
     setOpeningUserId(friend.userId);
 
     try {
       // 목록을 아직 안 받아왔다면(친구 탭으로 바로 들어온 경우) 먼저 채운다
       await fetchRooms();
-
-      const existing = findDirectRoom(friend);
-      if (existing) {
-        router.push(`/chat/${existing.roomId}`);
-        return;
-      }
 
       const room = await createRoom({
         roomType: RoomType.DIRECT,
