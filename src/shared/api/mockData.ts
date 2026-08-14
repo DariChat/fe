@@ -143,13 +143,55 @@ export const mockFriendRequests: FriendRequestResponse[] = [
 
 /** GET /api/users/search — 닉네임 부분일치, 본인 제외를 흉내낸다 */
 const mockSearchPool: UserSearchResponse[] = [
-  { id: 11, nickname: '서연', profileImageUrl: null },
-  { id: 12, nickname: '준호', profileImageUrl: null },
-  { id: 13, nickname: 'Emily', profileImageUrl: null },
-  { id: 21, nickname: '지원', profileImageUrl: null },
-  { id: 22, nickname: '태양', profileImageUrl: null },
-  { id: 23, nickname: '수진', profileImageUrl: null },
-  { id: 24, nickname: 'Kenji', profileImageUrl: null },
+  {
+    id: 11,
+    nickname: '서연',
+    profileImageUrl: null,
+    bio: '디자인하고 사진 찍어요.',
+    preferredLanguage: PreferredLanguage.KO,
+  },
+  {
+    id: 12,
+    nickname: '준호',
+    profileImageUrl: null,
+    bio: null,
+    preferredLanguage: PreferredLanguage.KO,
+  },
+  {
+    id: 13,
+    nickname: 'Emily',
+    profileImageUrl: null,
+    bio: 'Korean learner from Toronto. Coffee lover.',
+    preferredLanguage: PreferredLanguage.EN,
+  },
+  {
+    id: 21,
+    nickname: '지원',
+    profileImageUrl: null,
+    bio: '백엔드 개발자. 일본어 공부 중이에요.',
+    preferredLanguage: PreferredLanguage.KO,
+  },
+  {
+    id: 22,
+    nickname: '태양',
+    profileImageUrl: null,
+    bio: null,
+    preferredLanguage: PreferredLanguage.KO,
+  },
+  {
+    id: 23,
+    nickname: '수진',
+    profileImageUrl: null,
+    bio: '여행 좋아합니다. 같이 이야기해요!',
+    preferredLanguage: PreferredLanguage.KO,
+  },
+  {
+    id: 24,
+    nickname: 'Kenji',
+    profileImageUrl: null,
+    bio: '東京在住のエンジニアです。',
+    preferredLanguage: PreferredLanguage.JA,
+  },
 ];
 
 export const searchMockUsers = (keyword: string): UserSearchResponse[] =>

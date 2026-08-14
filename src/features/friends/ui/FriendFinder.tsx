@@ -182,7 +182,11 @@ export function FriendFinder({ onError }: FriendFinderProps) {
 
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <form
+        onSubmit={handleSearch}
+        data-tour="user-search"
+        className="flex gap-2"
+      >
         <div className="relative flex-1">
           <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle" />
           <input
@@ -224,6 +228,7 @@ export function FriendFinder({ onError }: FriendFinderProps) {
             </p>
           )}
 
+          {/* 검색 결과는 훑어보는 목록이라 한 사람이 한 줄에 들어오게 둔다 */}
           <ul className="space-y-0.5">
             {results.map((user) => (
               <li
@@ -231,9 +236,23 @@ export function FriendFinder({ onError }: FriendFinderProps) {
                 className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-2 transition"
               >
                 <FriendAvatar nickname={user.nickname} size="sm" />
-                <span className="flex-1 min-w-0 font-medium truncate">
-                  {user.nickname}
-                </span>
+
+                <div className="flex-1 min-w-0 flex items-baseline gap-2">
+                  <span className="font-medium truncate shrink-0 max-w-[45%]">
+                    {user.nickname}
+                  </span>
+                  {user.preferredLanguage && (
+                    <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-surface-2 text-[11px] font-medium text-ink-muted">
+                      {LANGUAGE_LABELS[user.preferredLanguage]}
+                    </span>
+                  )}
+                  {user.bio && (
+                    <span className="text-[13px] text-ink-muted truncate">
+                      {user.bio}
+                    </span>
+                  )}
+                </div>
+
                 {requestButton(user.id)}
               </li>
             ))}

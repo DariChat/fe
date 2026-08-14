@@ -86,10 +86,19 @@ export interface PasswordUpdateRequest {
 }
 
 /** GET /api/users/search 결과. 커서는 마지막 항목의 nickname 문자열이다. */
+/**
+ * GET /api/users/search 결과.
+ *
+ * bio · preferredLanguage 는 아직 서버가 내려주지 않는다 (UserSearchResponse 에 없다).
+ * 검색 결과도 추천처럼 자기소개를 함께 보여주려면 서버 DTO 에 두 필드를 더하면 되고,
+ * 화면은 값이 있을 때만 그리도록 되어 있어 그때 프론트는 손댈 것이 없다.
+ */
 export interface UserSearchResponse {
   id: number;
   nickname: string;
   profileImageUrl: string | null;
+  bio?: string | null;
+  preferredLanguage?: PreferredLanguage;
 }
 
 /**
