@@ -32,8 +32,13 @@ export function BottomTabBar() {
     },
     {
       href: '/profile',
+      /*
+       * 데스크톱 레일은 언어 배지와 계정 메뉴가 따로지만 모바일에는 이 탭 하나뿐이다.
+       * 튜토리얼의 두 단계(언어·계정)가 여기를 함께 가리키게 둔다 —
+       * 이름을 안 달아두면 모바일에서는 언어 단계가 통째로 건너뛰어진다.
+       */
       label: '내 정보',
-      tour: 'profile-menu',
+      tour: 'language',
       icon: UserIcon,
       badge: 0,
     },

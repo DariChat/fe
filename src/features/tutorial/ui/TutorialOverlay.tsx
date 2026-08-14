@@ -23,8 +23,11 @@ const BUBBLE_WIDTH = 320;
 const GAP = 14;
 /** 화면 가장자리에서 최소한 띄울 여백 */
 const MARGIN = 12;
-/** 화면 전환 직후엔 대상이 아직 없을 수 있어 잠깐 기다린다 */
-const TARGET_WAIT_MS = 1800;
+/**
+ * 화면 전환 직후엔 대상이 아직 없을 수 있어 잠깐 기다린다.
+ * 이 시간 동안은 말풍선이 뜨지 않으므로 너무 길면 "안내가 사라진" 것처럼 보인다.
+ */
+const TARGET_WAIT_MS = 800;
 
 interface SpotRect {
   top: number;
@@ -142,7 +145,13 @@ export function TutorialOverlay() {
       frame = requestAnimationFrame(look);
     };
 
+    /*
+     * 앞 단계의 스포트라이트도 함께 지운다.
+     * 남겨두면 대상이 없는 단계(예: 모바일에 없는 요소)를 건너뛰는 동안
+     * 엉뚱한 곳이 밝게 강조된 채 말풍선만 사라진 화면이 된다.
+     */
     setBubble(null);
+    setSpot(null);
     look();
 
     return () => {
@@ -289,7 +298,8 @@ export function TutorialOverlay() {
 
       <div
         ref={bubbleRef}
-        className="fixed w-[320px] max-w-[calc(100vw-24px)] bg-surface text-ink rounded-2xl shadow-pop border border-line p-5 animate-pop-in"
+        /* 화면이 아주 낮아도(가로 모드 등) 말풍선이 잘리지 않도록 높이를 제한하고 안에서 굴린다 */
+        className="fixed w-[320px] max-w-[calc(100vw-24px)] max-h-[calc(100dvh-24px)] overflow-y-auto bg-surface text-ink rounded-2xl shadow-pop border border-line p-5 animate-pop-in"
         style={{
           top: bubble?.top ?? -9999,
           left: bubble?.left ?? -9999,

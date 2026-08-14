@@ -298,7 +298,7 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-full bg-surface">
       {/* 모바일에서는 앱 헤더가 숨겨지므로 이 헤더가 상단 안전영역까지 책임진다 */}
-      <div className="border-b border-line bg-surface px-3 md:px-4 py-2.5 flex items-center justify-between gap-2 pt-safe md:pt-2.5 shrink-0">
+      <div className="border-b border-line bg-surface px-3 md:px-5 py-3 md:py-4 pt-safe-3 md:pt-4 flex items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           {/* 모바일: 뒤로가기 / 데스크톱: 목록이 옆에 있으므로 불필요 */}
           <Link

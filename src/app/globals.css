@@ -140,9 +140,23 @@ header {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* 하단 고정 바에서 자체 여백 + 홈 인디케이터 여백을 함께 주고 싶을 때 */
+/*
+ * 고정 바에서 자체 여백 + 노치·홈 인디케이터 여백을 "함께" 주고 싶을 때.
+ *
+ * pt-safe / pb-safe 를 자체 padding 이 있는 요소에 그대로 걸면 안 된다 —
+ * 같은 속성이라 덮어써 버리고, 노치가 없는 기기에서는 env() 가 0 이라
+ * 여백이 통째로 사라진다.
+ */
+.pt-safe-3 {
+  padding-top: calc(env(safe-area-inset-top) + 0.75rem);
+}
+
 .pb-safe-2 {
   padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+}
+
+.pb-safe-3 {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
 }
 
 /* Scrollbar Styling */

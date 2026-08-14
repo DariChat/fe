@@ -79,7 +79,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     target: '[data-tour="language"]',
     route: '/friends',
     title: '내 언어를 정해 두세요',
-    body: '여기 표시된 언어로 상대의 메시지가 번역돼요. 프로필에서 언제든 바꿀 수 있습니다.',
+    body: '지금 설정된 언어로 상대의 메시지가 번역돼요. 프로필에서 언제든 바꿀 수 있습니다.',
     placement: 'right',
   },
   {

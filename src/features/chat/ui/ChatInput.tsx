@@ -34,7 +34,7 @@ export function ChatInput({
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t border-line bg-surface p-3 md:p-4 pb-safe-2 md:pb-4 shrink-0"
+      className="border-t border-line bg-surface px-3 md:px-5 pt-3.5 md:pt-4 pb-safe-3 md:pb-4 shrink-0"
     >
       <div className="flex items-end gap-2">
         <input

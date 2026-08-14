@@ -63,7 +63,7 @@ export function MessageList({
 
   return (
     // flex-1 + min-h-0 이라야 부모(h-full flex-col) 안에서 메시지 영역만 스크롤된다
-    <div className="flex flex-col flex-1 min-h-0 px-4 md:px-6 py-5 overflow-y-auto">
+    <div className="flex flex-col flex-1 min-h-0 px-4 md:px-6 py-6 md:py-7 overflow-y-auto">
       {hasMore && onLoadMore && (
         <button
           type="button"
