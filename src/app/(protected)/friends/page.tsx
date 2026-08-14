@@ -1,18 +1,19 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import Link from 'next/link';
 import { useAutoRefresh } from '@/shared/lib/useAutoRefresh';
 import { useFriendsStore } from '@/features/friends/model/friendsStore';
 import { FriendList } from '@/features/friends/ui/FriendList';
 import { FriendRequestList } from '@/features/friends/ui/FriendRequestList';
-import { UserSearchPanel } from '@/features/friends/ui/UserSearchPanel';
+import { SearchIcon } from '@/shared/ui/icons';
 
-type FriendsTab = 'friends' | 'requests' | 'search';
+/** 새로운 사람을 찾는 일은 홈(/discover)이 맡는다 — 여기는 이미 아는 사이만 다룬다 */
+type FriendsTab = 'friends' | 'requests';
 
 const TABS: { key: FriendsTab; label: string }[] = [
   { key: 'friends', label: '친구' },
   { key: 'requests', label: '받은 요청' },
-  { key: 'search', label: '친구 찾기' },
 ];
 
 export default function FriendsPage() {
@@ -64,12 +65,22 @@ export default function FriendsPage() {
   return (
     <div className="min-h-full bg-bg py-6 md:py-10">
       <div className="max-w-2xl mx-auto px-4">
-        <header className="mb-5">
-          <h1 className="text-2xl font-semibold tracking-tight">친구</h1>
-          <p className="text-sm text-ink-muted mt-1">
-            친구 {friends.length}명
-            {requests.length > 0 && ` · 받은 요청 ${requests.length}건`}
-          </p>
+        <header className="mb-5 flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">친구</h1>
+            <p className="text-sm text-ink-muted mt-1">
+              친구 {friends.length}명
+              {requests.length > 0 && ` · 받은 요청 ${requests.length}건`}
+            </p>
+          </div>
+
+          <Link
+            href="/discover"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-surface border border-line rounded-xl hover:bg-surface-2 transition"
+          >
+            <SearchIcon className="w-4 h-4 text-ink-muted" />
+            친구 찾기
+          </Link>
         </header>
 
         <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
@@ -114,7 +125,6 @@ export default function FriendsPage() {
             {activeTab === 'requests' && (
               <FriendRequestList requests={requests} onError={setNotice} />
             )}
-            {activeTab === 'search' && <UserSearchPanel onError={setNotice} />}
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'DariChat',
     description: '실시간으로 대화하는 가장 쉬운 방법',
     // 설치 후 실행하면 바로 채팅 목록으로 (미로그인이면 로그인으로 리다이렉트된다)
-    start_url: '/rooms',
+    start_url: '/discover',
     scope: '/',
     display: 'standalone',
     background_color: '#ffffff',

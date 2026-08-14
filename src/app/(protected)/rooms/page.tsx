@@ -18,7 +18,7 @@ export default function RoomsPage() {
           왼쪽 목록에서 대화를 고르거나, + 버튼으로 새 대화를 시작할 수 있어요.
         </p>
         <Link
-          href="/friends"
+          href="/discover"
           className="inline-block mt-5 px-4 py-2 text-sm font-medium bg-surface border border-line rounded-xl hover:bg-surface-2 transition"
         >
           다른 언어 쓰는 친구 찾기

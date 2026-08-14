@@ -18,7 +18,7 @@ export function Header() {
   return (
     <header className="md:hidden bg-surface border-b border-line pt-safe shrink-0">
       <div className="flex items-center justify-between px-4 py-3">
-        <Link href="/rooms" data-tour="brand" className="flex items-center gap-2">
+        <Link href="/discover" data-tour="brand" className="flex items-center gap-2">
           <Image
             src="/icons/icon-512.png"
             alt=""

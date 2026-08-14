@@ -15,11 +15,17 @@ import { FriendAvatar } from './FriendAvatar';
 const PAGE_SIZE = 20;
 const RECOMMEND_PAGE_SIZE = 10;
 
-interface UserSearchPanelProps {
+interface FriendFinderProps {
   onError: (message: string) => void;
 }
 
-export function UserSearchPanel({ onError }: UserSearchPanelProps) {
+/**
+ * 친구 찾기 화면의 본체 — 추천 목록과 닉네임 검색.
+ *
+ * 로그인하면 가장 먼저 만나는 화면이라(=/discover) 기본 상태는 검색창이 아니라 추천이다.
+ * 아직 아무도 모르는 사람에게 빈 검색창만 주면 무엇을 쳐야 할지 알 수 없다.
+ */
+export function FriendFinder({ onError }: FriendFinderProps) {
   const friends = useFriendsStore((state) => state.friends);
   const sentRequests = useFriendsStore((state) => state.sentRequests);
   const sendRequest = useFriendsStore((state) => state.sendRequest);
@@ -265,11 +271,14 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
             </p>
           )}
 
-          <ul className="space-y-2">
+          <ul
+            data-tour="discover-list"
+            className="grid gap-2 md:grid-cols-2"
+          >
             {recommendations.map((user) => (
               <li
                 key={user.userId}
-                className="flex items-start gap-3 p-3 border border-line rounded-xl hover:bg-surface-2 transition"
+                className="flex items-start gap-3 p-3 bg-surface border border-line rounded-xl hover:border-line-strong transition"
               >
                 <FriendAvatar nickname={user.nickname} size="sm" />
 

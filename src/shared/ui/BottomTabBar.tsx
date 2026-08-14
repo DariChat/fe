@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChatIcon, FriendsIcon, UserIcon } from '@/shared/ui/icons';
+import { ChatIcon, FriendsIcon, SearchIcon, UserIcon } from '@/shared/ui/icons';
 import { useRoomsStore } from '@/features/rooms/model/roomsStore';
 import { useFriendsStore } from '@/features/friends/model/friendsStore';
 
@@ -16,6 +16,14 @@ export function BottomTabBar() {
   const requestCount = useFriendsStore((state) => state.requests.length);
 
   const tabs = [
+    {
+      // 로그인하면 여기가 첫 화면이다 (홈)
+      href: '/discover',
+      label: '찾기',
+      tour: 'nav-discover',
+      icon: SearchIcon,
+      badge: 0,
+    },
     {
       href: '/rooms',
       label: '채팅',

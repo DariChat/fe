@@ -12,6 +12,7 @@ import {
   FriendsIcon,
   HelpIcon,
   LogoutIcon,
+  SearchIcon,
   UserIcon,
 } from '@/shared/ui/icons';
 import { authService } from '@/features/auth/service/authService';
@@ -82,6 +83,15 @@ export function Sidebar({ nickname, language }: SidebarProps) {
 
   const navItems = [
     {
+      // 로그인하면 여기가 첫 화면이다 (홈)
+      href: '/discover',
+      label: '찾기',
+      tour: 'nav-discover',
+      icon: SearchIcon,
+      match: ['/discover'],
+      badge: 0,
+    },
+    {
       href: '/rooms',
       label: '채팅',
       tour: 'nav-rooms',
@@ -102,7 +112,7 @@ export function Sidebar({ nickname, language }: SidebarProps) {
   return (
     <aside className="hidden md:flex w-[76px] flex-col items-center bg-surface border-r border-line py-3 shrink-0">
       <Link
-        href="/rooms"
+        href="/discover"
         data-tour="brand"
         aria-label="DariChat 홈"
         className="mb-3 rounded-2xl p-1.5 hover:bg-surface-2 transition"
