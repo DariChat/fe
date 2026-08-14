@@ -42,4 +42,13 @@ describe('authService (mock 모드)', () => {
     expect(user.email).toBe('bosung@example.com');
     expect(user.nickname).toBe('bosung');
   });
+
+  it('verifyEmail · resendVerification 은 서버 없이도 통과한다', async () => {
+    await expect(
+      authService.verifyEmail({ email: 'bosung@example.com', code: '123456' })
+    ).resolves.toBeUndefined();
+    await expect(
+      authService.resendVerification('bosung@example.com')
+    ).resolves.toBeUndefined();
+  });
 });

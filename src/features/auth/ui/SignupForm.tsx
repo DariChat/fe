@@ -46,7 +46,10 @@ export function SignupForm() {
         nickname: formData.nickname,
         preferredLanguage: formData.preferredLanguage,
       });
-      router.push('/auth/login');
+      // 가입과 동시에 서버가 인증코드를 메일로 보낸다 — 인증 전에는 로그인이 막혀 있다
+      router.push(
+        `/auth/verify-email?email=${encodeURIComponent(formData.email)}`
+      );
     } catch (err) {
       setError(toErrorMessage(err, '회원가입에 실패했습니다. 다시 시도해 주세요.'));
     } finally {
@@ -190,6 +193,10 @@ export function SignupForm() {
           >
             {isLoading ? '가입 중...' : '회원가입'}
           </button>
+
+          <p className="text-xs text-ink-subtle text-center">
+            가입하면 입력한 이메일로 인증코드가 발송돼요
+          </p>
         </form>
 
         <div className="relative">

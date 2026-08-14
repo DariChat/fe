@@ -21,6 +21,8 @@ const AUTH_ENDPOINTS = [
   '/api/auth/login',
   '/api/auth/signup',
   '/api/auth/reissue',
+  '/api/auth/verify-email',
+  '/api/auth/resend-verification',
 ];
 
 /** { success, data } 래퍼를 벗겨 data 만 돌려준다 */
@@ -32,6 +34,10 @@ export const toErrorMessage = (error: unknown, fallback: string): string => {
   const detail = (error as AxiosError<ErrorResponse>)?.response?.data?.error;
   return detail?.message || fallback;
 };
+
+/** ErrorResponse 의 서버 에러 코드 (AUTH_006 등). 화면 분기에 쓴다. */
+export const toErrorCode = (error: unknown): string | undefined =>
+  (error as AxiosError<ErrorResponse>)?.response?.data?.error?.code;
 
 /** 이미 사라진 리소스인지 — 취소하려는 요청을 상대가 먼저 처리한 경우 등 */
 export const isNotFound = (error: unknown): boolean =>

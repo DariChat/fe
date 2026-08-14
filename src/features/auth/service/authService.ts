@@ -4,6 +4,7 @@ import {
   SignupRequest,
   TokenResponse,
   UserResponse,
+  VerifyEmailRequest,
 } from '@/shared/types/api.types';
 import { mockTokenResponse, mockUser } from '@/shared/api/mockData';
 import { USE_MOCK } from '@/shared/config/env';
@@ -30,6 +31,24 @@ export const authService = {
 
     const response = await apiClient.post('/api/auth/signup', data);
     return unwrap<UserResponse>(response);
+  },
+
+  /** 가입 메일로 받은 6자리 코드를 검증한다. 성공해야 로그인이 열린다. */
+  async verifyEmail(data: VerifyEmailRequest): Promise<void> {
+    if (USE_MOCK) {
+      return;
+    }
+
+    await apiClient.post('/api/auth/verify-email', data);
+  },
+
+  /** 코드가 만료됐거나 메일을 못 받았을 때. 서버가 1분 간격을 강제한다 (429). */
+  async resendVerification(email: string): Promise<void> {
+    if (USE_MOCK) {
+      return;
+    }
+
+    await apiClient.post('/api/auth/resend-verification', { email });
   },
 
   async login(data: LoginRequest): Promise<TokenResponse> {

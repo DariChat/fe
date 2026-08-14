@@ -1,15 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { authService } from '../service/authService';
-import { toErrorMessage } from '@/shared/api/client';
+import { toErrorCode, toErrorMessage } from '@/shared/api/client';
+import { AUTH_ERROR } from '@/shared/types/api.types';
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const searchParams = useSearchParams();
+
+  // 인증을 막 마치고 넘어온 경우 (VerifyEmailForm → /auth/login?verified=1&email=…)
+  const justVerified = searchParams.get('verified') === '1';
+  const [email, setEmail] = useState(searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,8 +28,13 @@ export function LoginForm() {
       await authService.login({ email, password });
       router.push('/discover');
     } catch (err) {
+      // 비밀번호는 맞았는데 이메일만 미인증이면, 로그인 실패로 끝내지 않고 인증 화면으로 보낸다
+      if (toErrorCode(err) === AUTH_ERROR.EMAIL_NOT_VERIFIED) {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
+
       setError(toErrorMessage(err, '로그인에 실패했습니다. 다시 시도해 주세요.'));
-    } finally {
       setIsLoading(false);
     }
   };
@@ -48,6 +58,12 @@ export function LoginForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {justVerified && !error && (
+            <div className="bg-surface-2 border border-line text-ink-muted px-4 py-3 rounded-xl text-sm">
+              이메일 인증이 완료됐어요. 이제 로그인할 수 있습니다.
+            </div>
+          )}
+
           {error && (
             <div className="bg-danger-soft border border-danger-line text-danger px-4 py-3 rounded-xl text-sm">
               {error}

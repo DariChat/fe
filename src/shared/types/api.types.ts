@@ -39,6 +39,39 @@ export interface TokenResponse {
   refreshToken: string | null;
 }
 
+/** POST /api/auth/verify-email — 가입 시 메일로 받은 6자리 숫자 코드 */
+export interface VerifyEmailRequest {
+  email: string;
+  code: string;
+}
+
+/** POST /api/auth/resend-verification — 서버가 1분 간격 제한을 건다 (초과 시 429) */
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+/** 인증 코드 자릿수 (서버 @Pattern(regexp = "\\d{6}")) */
+export const VERIFICATION_CODE_LENGTH = 6;
+
+/** 재발송 최소 간격 — AuthService.VERIFICATION_RESEND_COOLDOWN_MS 와 맞춰둔 값 */
+export const VERIFICATION_RESEND_COOLDOWN_SEC = 60;
+
+/**
+ * 서버 AuthErrorCode 중 화면 분기가 필요한 것들.
+ * (메시지는 서버 문구를 그대로 쓰고, 코드는 "어디로 보낼지" 판단에만 쓴다)
+ */
+export const AUTH_ERROR = {
+  /** 로그인은 맞았지만 아직 이메일 미인증 → 인증 화면으로 보낸다 */
+  EMAIL_NOT_VERIFIED: 'AUTH_006',
+  /** 코드가 만료됐거나 없음 → 재발송을 권한다 */
+  VERIFICATION_CODE_NOT_FOUND: 'AUTH_007',
+  VERIFICATION_CODE_MISMATCH: 'AUTH_008',
+  /** 이미 인증된 계정 → 로그인 화면으로 보낸다 */
+  EMAIL_ALREADY_VERIFIED: 'AUTH_009',
+  VERIFICATION_EMAIL_NOT_FOUND: 'AUTH_010',
+  VERIFICATION_RESEND_TOO_SOON: 'AUTH_011',
+} as const;
+
 // 사용자
 
 /** 서버가 번역 대상 언어를 고르는 기준 (User.preferredLanguage) */
