@@ -5,7 +5,7 @@ import {
   FriendRequestResponse,
   FriendResponse,
 } from '@/shared/types/api.types';
-import { toErrorMessage } from '@/shared/api/client';
+import { isNotFound, toErrorMessage } from '@/shared/api/client';
 import { friendService } from '../service/friendService';
 
 /**
@@ -13,16 +13,27 @@ import { friendService } from '../service/friendService';
  * 요청을 수락하면 요청 목록에서 빠지고 친구 목록에 들어가야 해서 한 곳에 모아둔다.
  */
 
+/**
+ * 내가 보낸 요청. 취소하려면 friendshipId 가 필요한데
+ * 서버에 "보낸 요청 목록" 조회가 없어서 보낼 때 받은 응답으로만 알 수 있다.
+ * 그래서 새로고침하면 사라진다 — 목록 API 가 생기면 fetchAll 에서 채우면 된다.
+ */
+interface SentRequest {
+  userId: number;
+  friendshipId: number;
+}
+
 interface FriendsState {
   friends: FriendResponse[];
   requests: FriendRequestResponse[];
   /** 이미 요청을 보낸 상대 — 검색 결과에서 버튼을 되돌리지 않으려고 기억한다 */
-  requestedUserIds: number[];
+  sentRequests: SentRequest[];
   hasLoaded: boolean;
   isLoading: boolean;
   error: string;
   fetchAll: (options?: { force?: boolean }) => Promise<void>;
   sendRequest: (addresseeId: number) => Promise<void>;
+  cancelRequest: (addresseeId: number) => Promise<void>;
   acceptRequest: (friendshipId: number) => Promise<void>;
   rejectRequest: (friendshipId: number) => Promise<void>;
   applyFriendEvent: (event: FriendEvent) => void;
@@ -32,7 +43,7 @@ interface FriendsState {
 const initialState = {
   friends: [] as FriendResponse[],
   requests: [] as FriendRequestResponse[],
-  requestedUserIds: [] as number[],
+  sentRequests: [] as SentRequest[],
   hasLoaded: false,
   isLoading: false,
   error: '',
@@ -68,9 +79,37 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   },
 
   async sendRequest(addresseeId) {
-    await friendService.sendRequest(addresseeId);
+    const created = await friendService.sendRequest(addresseeId);
     set((state) => ({
-      requestedUserIds: [...state.requestedUserIds, addresseeId],
+      sentRequests: [
+        ...state.sentRequests.filter((sent) => sent.userId !== addresseeId),
+        { userId: addresseeId, friendshipId: created.friendshipId },
+      ],
+    }));
+  },
+
+  /**
+   * 보낸 요청 취소. 거절과 같은 엔드포인트를 쓴다 (DELETE /api/friends/requests/{id}).
+   *
+   * 상대가 이미 수락·거절했다면 그 요청은 서버에 없다. 404 는 "이미 정리됨" 이므로
+   * 실패로 보지 않고 화면에서도 지운다 — 그러지 않으면 눌러도 안 지워지는 버튼이 남는다.
+   */
+  async cancelRequest(addresseeId) {
+    const target = get().sentRequests.find(
+      (sent) => sent.userId === addresseeId
+    );
+    if (!target) return;
+
+    try {
+      await friendService.deleteRequest(target.friendshipId);
+    } catch (err) {
+      if (!isNotFound(err)) throw err;
+    }
+
+    set((state) => ({
+      sentRequests: state.sentRequests.filter(
+        (sent) => sent.userId !== addresseeId
+      ),
     }));
   },
 
@@ -127,8 +166,8 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
           ? state.friends
           : [...state.friends, friend],
         // 이제 친구가 됐으니 검색 결과의 '요청함' 표시를 붙들고 있을 이유가 없다
-        requestedUserIds: state.requestedUserIds.filter(
-          (id) => id !== friend.userId
+        sentRequests: state.sentRequests.filter(
+          (sent) => sent.userId !== friend.userId
         ),
       }));
     }

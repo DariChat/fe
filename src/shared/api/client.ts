@@ -31,6 +31,10 @@ export const toErrorMessage = (error: unknown, fallback: string): string => {
   return detail?.message || fallback;
 };
 
+/** 이미 사라진 리소스인지 — 취소하려는 요청을 상대가 먼저 처리한 경우 등 */
+export const isNotFound = (error: unknown): boolean =>
+  (error as AxiosError)?.response?.status === 404;
+
 apiClient.interceptors.request.use((config) => {
   const token = getAccessToken();
   if (token) {

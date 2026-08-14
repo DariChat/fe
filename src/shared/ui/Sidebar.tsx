@@ -12,6 +12,8 @@ const NAV_ITEMS = [
  * 데스크톱 전용 아이콘 레일.
  * 목록 패널과 대화창을 나란히 두려면 폭을 아껴야 해서 아이콘만 남겼다.
  * 모바일에서는 BottomTabBar 가 이 역할을 대신한다.
+ *
+ * 방 만들기 버튼은 여기 두지 않는다 — 채팅 목록 헤더의 + 가 그 역할을 한다.
  */
 export function Sidebar() {
   const pathname = usePathname();
@@ -40,15 +42,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-
-      <div className="mt-auto px-2 w-full">
-        <button
-          title="새 채팅"
-          className="w-full aspect-square rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 text-white text-2xl font-light hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
-        >
-          +
-        </button>
-      </div>
     </aside>
   );
 }

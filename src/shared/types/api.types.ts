@@ -24,12 +24,13 @@ export interface LoginRequest {
   password: string;
 }
 
+/** preferredLanguage 는 서버에서 필수다 — 빠지면 400 이 온다 */
 export interface SignupRequest {
   name: string;
   email: string;
   password: string;
   nickname: string;
-  preferredLanguage?: PreferredLanguage;
+  preferredLanguage: PreferredLanguage;
 }
 
 /** 로그인/재발급 시 refreshToken 은 HttpOnly 쿠키로만 내려오고 바디에는 null 이 담긴다 */
@@ -64,10 +65,11 @@ export interface UserResponse {
   lastActiveAt: string;
 }
 
+/** nickname · preferredLanguage 는 서버에서 필수다 (profileImageUrl 만 선택) */
 export interface UserUpdateRequest {
   nickname: string;
   profileImageUrl?: string | null;
-  preferredLanguage?: PreferredLanguage;
+  preferredLanguage: PreferredLanguage;
 }
 
 export interface PasswordUpdateRequest {

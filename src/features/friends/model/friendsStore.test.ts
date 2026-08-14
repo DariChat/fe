@@ -65,10 +65,26 @@ describe('useFriendsStore (mock 모드)', () => {
     expect(friends).toHaveLength(before);
   });
 
-  it('친구 요청을 보내면 검색 결과 버튼용으로 상대 id 를 기억한다', async () => {
+  it('친구 요청을 보내면 취소할 수 있도록 friendshipId 까지 기억한다', async () => {
     await useFriendsStore.getState().sendRequest(24);
 
-    expect(useFriendsStore.getState().requestedUserIds).toContain(24);
+    expect(useFriendsStore.getState().sentRequests).toEqual([
+      { userId: 24, friendshipId: expect.any(Number) },
+    ]);
+  });
+
+  it('보낸 요청을 취소하면 기록에서 지워진다', async () => {
+    await useFriendsStore.getState().sendRequest(24);
+
+    await useFriendsStore.getState().cancelRequest(24);
+
+    expect(useFriendsStore.getState().sentRequests).toHaveLength(0);
+  });
+
+  it('보낸 적 없는 상대를 취소하려 하면 아무 일도 하지 않는다', async () => {
+    await expect(
+      useFriendsStore.getState().cancelRequest(999)
+    ).resolves.toBeUndefined();
   });
 
   describe('서버 푸시 이벤트 (/user/queue/friends)', () => {
@@ -120,9 +136,9 @@ describe('useFriendsStore (mock 모드)', () => {
 
       useFriendsStore.getState().applyFriendEvent(acceptedEvent);
 
-      const { friends, requestedUserIds } = useFriendsStore.getState();
+      const { friends, sentRequests } = useFriendsStore.getState();
       expect(friends.some((friend) => friend.userId === 24)).toBe(true);
-      expect(requestedUserIds).not.toContain(24);
+      expect(sentRequests.some((sent) => sent.userId === 24)).toBe(false);
     });
   });
 });

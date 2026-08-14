@@ -1,4 +1,5 @@
 import { authService } from './authService';
+import { PreferredLanguage } from '@/shared/types/api.types';
 import { mockTokenResponse, mockUser } from '@/shared/api/mockData';
 
 jest.mock('@/shared/api/client', () => ({
@@ -34,6 +35,7 @@ describe('authService (mock 모드)', () => {
       email: 'bosung@example.com',
       password: 'password1234',
       nickname: 'bosung',
+      preferredLanguage: PreferredLanguage.KO,
     });
 
     expect(user.name).toBe('김보성');

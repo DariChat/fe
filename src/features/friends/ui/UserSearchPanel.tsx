@@ -15,8 +15,9 @@ interface UserSearchPanelProps {
 
 export function UserSearchPanel({ onError }: UserSearchPanelProps) {
   const friends = useFriendsStore((state) => state.friends);
-  const requestedUserIds = useFriendsStore((state) => state.requestedUserIds);
+  const sentRequests = useFriendsStore((state) => state.sentRequests);
   const sendRequest = useFriendsStore((state) => state.sendRequest);
+  const cancelRequest = useFriendsStore((state) => state.cancelRequest);
 
   const [keyword, setKeyword] = useState('');
   const [results, setResults] = useState<UserSearchResponse[]>([]);
@@ -64,6 +65,12 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
     }
   };
 
+  const isFriend = (user: UserSearchResponse) =>
+    friends.some((friend) => friend.userId === user.id);
+
+  const isRequested = (user: UserSearchResponse) =>
+    sentRequests.some((sent) => sent.userId === user.id);
+
   const handleSend = async (user: UserSearchResponse) => {
     setSendingId(user.id);
     try {
@@ -76,16 +83,23 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
     }
   };
 
-  const labelFor = (user: UserSearchResponse) => {
-    if (friends.some((friend) => friend.userId === user.id)) return '친구';
-    if (requestedUserIds.includes(user.id)) return '요청됨';
-    return sendingId === user.id ? '보내는 중...' : '친구 요청';
+  /** 보낸 요청 취소 — 거절과 같은 엔드포인트다 */
+  const handleCancel = async (user: UserSearchResponse) => {
+    setSendingId(user.id);
+    try {
+      await cancelRequest(user.id);
+    } catch (err) {
+      onError(toErrorMessage(err, '요청을 취소하지 못했습니다'));
+    } finally {
+      setSendingId(null);
+    }
   };
 
-  const isDisabled = (user: UserSearchResponse) =>
-    sendingId === user.id ||
-    requestedUserIds.includes(user.id) ||
-    friends.some((friend) => friend.userId === user.id);
+  const labelFor = (user: UserSearchResponse) => {
+    if (isFriend(user)) return '친구';
+    if (sendingId === user.id) return '처리 중...';
+    return isRequested(user) ? '요청 취소' : '친구 요청';
+  };
 
   return (
     <div className="space-y-4">
@@ -123,9 +137,15 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
             </span>
             <button
               type="button"
-              onClick={() => handleSend(user)}
-              disabled={isDisabled(user)}
-              className="px-3 py-1.5 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition disabled:opacity-50 disabled:hover:bg-transparent"
+              onClick={() =>
+                isRequested(user) ? handleCancel(user) : handleSend(user)
+              }
+              disabled={isFriend(user) || sendingId === user.id}
+              className={`px-3 py-1.5 text-sm font-medium border rounded-lg transition disabled:opacity-50 disabled:hover:bg-transparent ${
+                isRequested(user)
+                  ? 'text-gray-600 border-gray-200 hover:bg-gray-50'
+                  : 'text-indigo-600 border-indigo-200 hover:bg-indigo-50'
+              }`}
             >
               {labelFor(user)}
             </button>
