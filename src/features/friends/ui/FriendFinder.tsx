@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   LANGUAGE_LABELS,
+  PreferredLanguage,
   UserRecommendationResponse,
   UserSearchResponse,
 } from '@/shared/types/api.types';
@@ -180,6 +181,41 @@ export function FriendFinder({ onError }: FriendFinderProps) {
     </button>
   );
 
+  /*
+   * 추천과 검색 결과가 같은 모양이어야 눈이 헷갈리지 않는다.
+   * 한 사람이 한 줄 — 닉네임 · 사용 언어 · 자기소개가 나란히 놓이고,
+   * 자기소개는 줄을 넘기지 않고 말줄임한다.
+   */
+  const personRow = (
+    userId: number,
+    nickname: string,
+    language?: PreferredLanguage,
+    bio?: string | null
+  ) => (
+    <li
+      key={userId}
+      className="flex items-center gap-3 p-3 bg-surface border border-line rounded-xl hover:border-line-strong transition"
+    >
+      <FriendAvatar nickname={nickname} size="sm" />
+
+      <div className="flex-1 min-w-0 flex items-baseline gap-2">
+        <span className="font-medium truncate shrink-0 max-w-[45%]">
+          {nickname}
+        </span>
+        {language && (
+          <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-surface-2 text-[11px] font-medium text-ink-muted">
+            {LANGUAGE_LABELS[language]}
+          </span>
+        )}
+        {bio && (
+          <span className="text-[13px] text-ink-muted truncate">{bio}</span>
+        )}
+      </div>
+
+      {requestButton(userId)}
+    </li>
+  );
+
   return (
     <div className="space-y-4">
       <form
@@ -228,34 +264,10 @@ export function FriendFinder({ onError }: FriendFinderProps) {
             </p>
           )}
 
-          {/* 검색 결과는 훑어보는 목록이라 한 사람이 한 줄에 들어오게 둔다 */}
-          <ul className="space-y-0.5">
-            {results.map((user) => (
-              <li
-                key={user.id}
-                className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-2 transition"
-              >
-                <FriendAvatar nickname={user.nickname} size="sm" />
-
-                <div className="flex-1 min-w-0 flex items-baseline gap-2">
-                  <span className="font-medium truncate shrink-0 max-w-[45%]">
-                    {user.nickname}
-                  </span>
-                  {user.preferredLanguage && (
-                    <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-surface-2 text-[11px] font-medium text-ink-muted">
-                      {LANGUAGE_LABELS[user.preferredLanguage]}
-                    </span>
-                  )}
-                  {user.bio && (
-                    <span className="text-[13px] text-ink-muted truncate">
-                      {user.bio}
-                    </span>
-                  )}
-                </div>
-
-                {requestButton(user.id)}
-              </li>
-            ))}
+          <ul className="space-y-2">
+            {results.map((user) =>
+              personRow(user.id, user.nickname, user.preferredLanguage, user.bio)
+            )}
           </ul>
 
           {hasMore && (
@@ -295,33 +307,15 @@ export function FriendFinder({ onError }: FriendFinderProps) {
               </p>
             )}
 
-            <ul className="grid gap-2 md:grid-cols-2">
-            {recommendations.map((user) => (
-              <li
-                key={user.userId}
-                className="flex items-start gap-3 p-3 bg-surface border border-line rounded-xl hover:border-line-strong transition"
-              >
-                <FriendAvatar nickname={user.nickname} size="sm" />
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium truncate">
-                      {user.nickname}
-                    </span>
-                    <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-surface-2 text-[11px] font-medium text-ink-muted">
-                      {LANGUAGE_LABELS[user.preferredLanguage]}
-                    </span>
-                  </div>
-                  {user.bio && (
-                    <p className="text-[13px] text-ink-muted mt-1 line-clamp-2">
-                      {user.bio}
-                    </p>
-                  )}
-                </div>
-
-                {requestButton(user.userId)}
-              </li>
-            ))}
+            <ul className="space-y-2">
+              {recommendations.map((user) =>
+                personRow(
+                  user.userId,
+                  user.nickname,
+                  user.preferredLanguage,
+                  user.bio
+                )
+              )}
             </ul>
 
             {recommendations.length > 0 && !isRecommendExhausted && (
