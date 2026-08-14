@@ -123,6 +123,7 @@ export function TutorialOverlay() {
 
     let frame = 0;
     let cancelled = false;
+    let observer: ResizeObserver | null = null;
     const startedAt = performance.now();
 
     const look = () => {
@@ -134,6 +135,13 @@ export function TutorialOverlay() {
         // 목록 아래쪽 항목이면 화면 안으로 끌어와야 스포트라이트가 보인다
         element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
         setSpot(toSpotRect(element, step));
+
+        /*
+         * 대상이 아직 데이터를 기다리는 중일 수 있다(추천 목록 등).
+         * 내용이 채워지며 크기가 변하면 구멍도 같이 커져야 한다.
+         */
+        observer = new ResizeObserver(() => setSpot(toSpotRect(element, step)));
+        observer.observe(element);
         return;
       }
 
@@ -157,6 +165,7 @@ export function TutorialOverlay() {
     return () => {
       cancelled = true;
       cancelAnimationFrame(frame);
+      observer?.disconnect();
     };
   }, [isActive, step, stepIndex, pathname, skipTo]);
 

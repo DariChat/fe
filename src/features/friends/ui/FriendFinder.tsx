@@ -271,29 +271,31 @@ export function FriendFinder({ onError }: FriendFinderProps) {
         </>
       ) : (
         <>
-          <div>
-            <h2 className="text-sm font-semibold">이런 사람은 어때요?</h2>
-            <p className="text-xs text-ink-muted mt-0.5">
-              나와 다른 언어를 쓰는 사람들이에요. 번역은 자동으로 됩니다.
-            </p>
-          </div>
+          {/*
+            튜토리얼이 가리키는 자리다. 목록(ul)이 아니라 이 묶음에 이름을 달아야 한다 —
+            추천을 불러오는 동안 목록은 높이가 0 이라 안내가 대상을 못 찾고 그 단계를 건너뛴다.
+          */}
+          <section data-tour="discover-list" className="space-y-3">
+            <div>
+              <h2 className="text-sm font-semibold">이런 사람은 어때요?</h2>
+              <p className="text-xs text-ink-muted mt-0.5">
+                나와 다른 언어를 쓰는 사람들이에요. 번역은 자동으로 됩니다.
+              </p>
+            </div>
 
-          {recommendations.length === 0 && isRecommendLoading && (
-            <p className="text-center text-sm text-ink-muted py-12">
-              추천을 불러오는 중...
-            </p>
-          )}
+            {recommendations.length === 0 && isRecommendLoading && (
+              <p className="text-center text-sm text-ink-muted py-12">
+                추천을 불러오는 중...
+              </p>
+            )}
 
-          {recommendations.length === 0 && !isRecommendLoading && (
-            <p className="text-center text-sm text-ink-muted py-12">
-              지금은 추천할 사람이 없어요. 닉네임으로 직접 찾아보세요.
-            </p>
-          )}
+            {recommendations.length === 0 && !isRecommendLoading && (
+              <p className="text-center text-sm text-ink-muted py-12">
+                지금은 추천할 사람이 없어요. 닉네임으로 직접 찾아보세요.
+              </p>
+            )}
 
-          <ul
-            data-tour="discover-list"
-            className="grid gap-2 md:grid-cols-2"
-          >
+            <ul className="grid gap-2 md:grid-cols-2">
             {recommendations.map((user) => (
               <li
                 key={user.userId}
@@ -320,20 +322,23 @@ export function FriendFinder({ onError }: FriendFinderProps) {
                 {requestButton(user.userId)}
               </li>
             ))}
-          </ul>
+            </ul>
 
-          {recommendations.length > 0 && !isRecommendExhausted && (
-            <button
-              type="button"
-              onClick={() =>
-                loadRecommendations(recommendations.map((user) => user.userId))
-              }
-              disabled={isRecommendLoading}
-              className="w-full py-2 text-sm font-medium text-accent-ink hover:bg-accent-soft rounded-lg transition disabled:opacity-50"
-            >
-              {isRecommendLoading ? '불러오는 중...' : '다른 사람 더 보기'}
-            </button>
-          )}
+            {recommendations.length > 0 && !isRecommendExhausted && (
+              <button
+                type="button"
+                onClick={() =>
+                  loadRecommendations(
+                    recommendations.map((user) => user.userId)
+                  )
+                }
+                disabled={isRecommendLoading}
+                className="w-full py-2 text-sm font-medium text-accent-ink hover:bg-accent-soft rounded-lg transition disabled:opacity-50"
+              >
+                {isRecommendLoading ? '불러오는 중...' : '다른 사람 더 보기'}
+              </button>
+            )}
+          </section>
         </>
       )}
     </div>
