@@ -4,8 +4,10 @@ import {
   FriendEventType,
   FriendRequestResponse,
   FriendResponse,
+  FriendshipStatus,
 } from '@/shared/types/api.types';
 import { isNotFound, toErrorMessage } from '@/shared/api/client';
+import { isRemoteDataFrozen } from '@/shared/lib/remoteData';
 import { friendService } from '../service/friendService';
 
 /**
@@ -34,6 +36,7 @@ interface FriendsState {
   fetchAll: (options?: { force?: boolean }) => Promise<void>;
   sendRequest: (addresseeId: number) => Promise<void>;
   cancelRequest: (addresseeId: number) => Promise<void>;
+  removeFriend: (userId: number) => Promise<void>;
   acceptRequest: (friendshipId: number) => Promise<void>;
   rejectRequest: (friendshipId: number) => Promise<void>;
   applyFriendEvent: (event: FriendEvent) => void;
@@ -53,6 +56,11 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   ...initialState,
 
   async fetchAll({ force = false } = {}) {
+    // 튜토리얼이 예시 목록을 띄워둔 동안에는 실제 목록으로 덮지 않는다
+    if (isRemoteDataFrozen()) {
+      return;
+    }
+
     if (get().hasLoaded && !force) {
       return;
     }
@@ -78,8 +86,35 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     }
   },
 
+  /**
+   * 친구 요청 보내기.
+   *
+   * 상대가 이미 나에게 요청을 보내둔 상태라면 서버는 새 요청을 만들지 않고
+   * 그 요청을 즉시 수락한다(status=ACCEPTED). 그때는 "보낸 요청"이 아니라 친구가 된 것이므로
+   * 받은 요청 목록에서 빼고 친구 목록을 다시 받아 화면을 맞춘다.
+   */
   async sendRequest(addresseeId) {
     const created = await friendService.sendRequest(addresseeId);
+
+    if (created.status === FriendshipStatus.ACCEPTED) {
+      set((state) => ({
+        requests: state.requests.filter(
+          (request) => request.friendshipId !== created.friendshipId
+        ),
+        sentRequests: state.sentRequests.filter(
+          (sent) => sent.userId !== addresseeId
+        ),
+      }));
+
+      // 수락 자체는 이미 끝났으므로 목록 갱신 실패로 요청을 실패 처리하지 않는다
+      try {
+        set({ friends: await friendService.getFriends() });
+      } catch {
+        console.warn('친구 목록 갱신에 실패했습니다. 다음 조회 때 반영됩니다.');
+      }
+      return;
+    }
+
     set((state) => ({
       sentRequests: [
         ...state.sentRequests.filter((sent) => sent.userId !== addresseeId),
@@ -131,6 +166,41 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     } catch {
       console.warn('친구 목록 갱신에 실패했습니다. 다음 조회 때 반영됩니다.');
     }
+  },
+
+  /**
+   * 친구 끊기.
+   *
+   * 관계 id 는 목록 응답에만 담겨 온다. 수락 푸시로 들어온 친구는 비어 있으므로
+   * 그때만 목록을 한 번 다시 받아 id 를 채운 뒤 지운다.
+   * 404 는 상대가 먼저 끊은 경우다 — 실패로 보지 않고 화면에서도 지운다.
+   */
+  async removeFriend(userId) {
+    const target = get().friends.find((friend) => friend.userId === userId);
+    if (!target) return;
+
+    let friendshipId = target.friendshipId;
+
+    if (friendshipId === null) {
+      const friends = await friendService.getFriends();
+      set({ friends });
+
+      friendshipId =
+        friends.find((friend) => friend.userId === userId)?.friendshipId ??
+        null;
+      // 새로 받은 목록에도 없다 = 이미 끊긴 관계 (위 set 으로 화면에서도 사라졌다)
+      if (friendshipId === null) return;
+    }
+
+    try {
+      await friendService.deleteFriend(friendshipId);
+    } catch (err) {
+      if (!isNotFound(err)) throw err;
+    }
+
+    set((state) => ({
+      friends: state.friends.filter((friend) => friend.userId !== userId),
+    }));
   },
 
   async rejectRequest(friendshipId) {

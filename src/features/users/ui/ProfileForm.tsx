@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { PreferredLanguage, UserResponse } from '@/shared/types/api.types';
 import { userService } from '../service/userService';
 import { toErrorMessage } from '@/shared/api/client';
 import { LanguageSelect } from '@/shared/ui/LanguageSelect';
+import { Avatar } from '@/shared/ui/Avatar';
 
 interface ProfileFormProps {
   user: UserResponse;
   onUpdate: (user: UserResponse) => void;
 }
+
+const FIELD_CLASS =
+  'w-full h-11 px-4 bg-surface-2 rounded-xl text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition';
 
 export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
   const [formData, setFormData] = useState({
@@ -90,87 +94,86 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        {/* 프로필 헤더 */}
-        <div className="bg-gradient-to-r from-indigo-600 to-cyan-600 px-6 py-8">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center text-2xl font-bold text-indigo-600">
-              {user.nickname.charAt(0).toUpperCase()}
-            </div>
-            <div className="text-white">
-              <h1 className="text-2xl font-bold">{user.name}</h1>
-              <p className="text-indigo-100">{user.email}</p>
-            </div>
+    <div className="max-w-2xl mx-auto px-4">
+      <div className="bg-surface border border-line rounded-2xl shadow-card overflow-hidden">
+        <div className="px-6 py-6 border-b border-line flex items-center gap-4">
+          <Avatar nickname={user.nickname} size="lg" />
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold truncate">{user.name}</h1>
+            <p className="text-sm text-ink-muted truncate">{user.email}</p>
           </div>
         </div>
 
-        {/* 탭 */}
-        <div className="flex border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`flex-1 py-4 px-6 font-semibold transition ${
-              activeTab === 'profile'
-                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            프로필
-          </button>
-          <button
-            onClick={() => setActiveTab('password')}
-            className={`flex-1 py-4 px-6 font-semibold transition ${
-              activeTab === 'password'
-                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            보안
-          </button>
+        <div className="flex gap-1 p-1.5 border-b border-line">
+          {[
+            { key: 'profile' as const, label: '프로필' },
+            { key: 'password' as const, label: '보안' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              aria-current={activeTab === tab.key ? 'page' : undefined}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition ${
+                activeTab === tab.key
+                  ? 'bg-accent-soft text-accent-ink'
+                  : 'text-ink-muted hover:bg-surface-2 hover:text-ink'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        <div className="p-6">
+        <div className="p-5 md:p-6">
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div className="mb-4 p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-sm">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+            <div className="mb-4 p-3 bg-accent-soft border border-line text-accent-ink rounded-xl text-sm">
               {success}
             </div>
           )}
 
           {activeTab === 'profile' && (
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
+            <form onSubmit={handleUpdateProfile} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="nickname"
+                  className="block text-sm font-medium mb-2"
+                >
                   닉네임
                 </label>
                 <input
+                  id="nickname"
                   type="text"
                   name="nickname"
                   value={formData.nickname}
                   onChange={handleProfileChange}
                   maxLength={20}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  className={FIELD_CLASS}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="profileImageUrl"
+                  className="block text-sm font-medium mb-2"
+                >
                   프로필 이미지 URL
                 </label>
                 <input
+                  id="profileImageUrl"
                   type="url"
                   name="profileImageUrl"
                   value={formData.profileImageUrl}
                   onChange={handleProfileChange}
                   placeholder="https://example.com/image.jpg"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  className={FIELD_CLASS}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-ink-subtle mt-1.5">
                   이미지 파일의 주소를 입력하세요
                 </p>
               </div>
@@ -178,7 +181,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
               <div>
                 <label
                   htmlFor="preferredLanguage"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium mb-2"
                 >
                   사용 언어
                 </label>
@@ -189,7 +192,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                     setFormData((prev) => ({ ...prev, preferredLanguage }))
                   }
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-ink-subtle mt-1.5">
                   다른 언어로 온 메시지를 이 언어로 번역해서 보여줍니다
                 </p>
               </div>
@@ -197,7 +200,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-11 bg-accent text-accent-fg text-sm font-semibold rounded-xl hover:bg-accent-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? '저장 중...' : '프로필 저장'}
               </button>
@@ -205,44 +208,50 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
           )}
 
           {activeTab === 'password' && (
-            <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <form onSubmit={handleUpdatePassword} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium mb-2"
+                >
                   새 비밀번호
                 </label>
                 <input
+                  id="password"
                   type="password"
                   name="password"
                   value={passwordData.password}
                   onChange={handlePasswordChange}
                   placeholder="••••••••"
                   minLength={8}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  className={FIELD_CLASS}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  최소 8자 이상
-                </p>
+                <p className="text-xs text-ink-subtle mt-1.5">최소 8자 이상</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium mb-2"
+                >
                   비밀번호 확인
                 </label>
                 <input
+                  id="confirmPassword"
                   type="password"
                   name="confirmPassword"
                   value={passwordData.confirmPassword}
                   onChange={handlePasswordChange}
                   placeholder="••••••••"
                   minLength={8}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                  className={FIELD_CLASS}
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-11 bg-accent text-accent-fg text-sm font-semibold rounded-xl hover:bg-accent-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? '변경 중...' : '비밀번호 변경'}
               </button>

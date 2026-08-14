@@ -8,9 +8,12 @@ import { userService } from '@/features/users/service/userService';
 import { authService } from '@/features/auth/service/authService';
 import { ProfileForm } from '@/features/users/ui/ProfileForm';
 import { toErrorMessage } from '@/shared/api/client';
+import { HelpIcon } from '@/shared/ui/icons';
+import { useTutorialStore } from '@/features/tutorial/model/tutorialStore';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const startTutorial = useTutorialStore((state) => state.start);
   const [user, setUser] = useState<UserResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -49,8 +52,8 @@ export default function ProfilePage() {
     return (
       <div className="flex items-center justify-center min-h-full">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">프로필을 불러오는 중...</p>
+          <div className="w-10 h-10 border-2 border-line-strong border-t-accent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-ink-muted">프로필을 불러오는 중...</p>
         </div>
       </div>
     );
@@ -60,8 +63,13 @@ export default function ProfilePage() {
     return (
       <div className="flex items-center justify-center min-h-full">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || '프로필을 불러오지 못했습니다'}</p>
-          <Link href="/rooms" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+          <p className="text-sm text-danger mb-4">
+            {error || '프로필을 불러오지 못했습니다'}
+          </p>
+          <Link
+            href="/rooms"
+            className="inline-block px-4 py-2 text-sm font-medium bg-accent text-accent-fg rounded-xl hover:bg-accent-hover transition"
+          >
             채팅 목록으로
           </Link>
         </div>
@@ -70,17 +78,26 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-full bg-gray-50 py-6 md:py-8">
+    <div className="min-h-full bg-bg py-6 md:py-10">
       <ProfileForm user={user} onUpdate={setUser} />
 
-      {/*
-        모바일에는 헤더 드롭다운이 없어 여기가 유일한 로그아웃 경로다.
-        데스크톱에서도 같은 자리에 있는 편이 찾기 쉬워 화면 폭과 무관하게 노출한다.
-      */}
-      <div className="max-w-2xl mx-auto px-4 mt-4">
+      <div className="max-w-2xl mx-auto px-4 mt-3 space-y-2">
+        {/* 안내는 언제든 다시 볼 수 있어야 한다 — 레일·헤더의 ? 버튼과 같은 동작 */}
+        <button
+          onClick={startTutorial}
+          className="w-full h-11 flex items-center justify-center gap-2 bg-surface border border-line text-sm font-medium rounded-xl hover:bg-surface-2 transition"
+        >
+          <HelpIcon className="w-[18px] h-[18px] text-ink-muted" />
+          사용법 다시 보기
+        </button>
+
+        {/*
+          모바일에는 레일 메뉴가 없어 여기가 유일한 로그아웃 경로다.
+          데스크톱에서도 같은 자리에 있는 편이 찾기 쉬워 화면 폭과 무관하게 노출한다.
+        */}
         <button
           onClick={handleLogout}
-          className="w-full py-3 bg-white border border-gray-200 text-red-600 rounded-xl font-semibold hover:bg-red-50 active:bg-red-100 transition"
+          className="w-full h-11 bg-surface border border-line text-danger text-sm font-semibold rounded-xl hover:bg-danger-soft transition"
         >
           로그아웃
         </button>

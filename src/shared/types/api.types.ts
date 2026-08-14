@@ -89,7 +89,13 @@ export enum FriendshipStatus {
   ACCEPTED = 'ACCEPTED',
 }
 
+/**
+ * friendshipId 는 친구 관계를 끊을 때 쓰는 값이다 (DELETE /api/friends/requests/{friendshipId}).
+ * 목록 조회에는 항상 담겨 오지만, 수락 푸시(FriendEvent.friend)로 받은 친구에는 null 이다
+ * — 서버가 그 이벤트에서는 관계 id 를 채우지 않는다. 삭제 직전에 목록을 다시 받아 채운다.
+ */
 export interface FriendResponse {
+  friendshipId: number | null;
   userId: number;
   nickname: string;
   profileImageUrl: string | null;

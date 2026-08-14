@@ -14,7 +14,7 @@ describe('ChatInput', () => {
     const onSendMessage = jest.fn().mockResolvedValue(undefined);
     render(<ChatInput onSendMessage={onSendMessage} />);
 
-    const input = screen.getByPlaceholderText('메시지를 입력하세요...');
+    const input = screen.getByPlaceholderText('메시지를 입력하세요');
     await user.type(input, '안녕하세요');
     await user.click(screen.getByRole('button', { name: /전송/ }));
 
@@ -27,21 +27,25 @@ describe('ChatInput', () => {
     const onSendMessage = jest.fn().mockResolvedValue(undefined);
     render(<ChatInput onSendMessage={onSendMessage} />);
 
-    await user.type(screen.getByPlaceholderText('메시지를 입력하세요...'), '  hi  ');
+    await user.type(screen.getByPlaceholderText('메시지를 입력하세요'), '  hi  ');
     await user.click(screen.getByRole('button', { name: /전송/ }));
 
     expect(onSendMessage).toHaveBeenCalledWith('hi');
   });
 
-  it('글자 수 카운터가 입력에 따라 갱신된다', async () => {
+  it('글자 수는 한도가 가까워질 때만 나타난다', async () => {
     const user = userEvent.setup();
     render(<ChatInput onSendMessage={jest.fn()} />);
 
-    expect(screen.getByText('0/500자')).toBeInTheDocument();
+    // 평소에는 시선을 뺏지 않도록 감춰 둔다
+    expect(screen.queryByText(/\/500$/)).not.toBeInTheDocument();
 
-    await user.type(screen.getByPlaceholderText('메시지를 입력하세요...'), 'hello');
+    await user.type(
+      screen.getByPlaceholderText('메시지를 입력하세요'),
+      'a'.repeat(401)
+    );
 
-    expect(screen.getByText('5/500자')).toBeInTheDocument();
+    expect(screen.getByText('401/500')).toBeInTheDocument();
   });
 
   it('전송이 실패해도 입력값은 남아 있다', async () => {
@@ -50,7 +54,7 @@ describe('ChatInput', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
     render(<ChatInput onSendMessage={onSendMessage} />);
 
-    const input = screen.getByPlaceholderText('메시지를 입력하세요...');
+    const input = screen.getByPlaceholderText('메시지를 입력하세요');
     await user.type(input, '재전송할 메시지');
     await user.click(screen.getByRole('button', { name: /전송/ }));
 

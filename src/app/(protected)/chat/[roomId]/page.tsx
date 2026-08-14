@@ -9,6 +9,8 @@ import {
   PublishStatus,
 } from '@/shared/types/api.types';
 import { readMyLanguage, readMyNickname } from '@/shared/lib/currentUser';
+import { Avatar } from '@/shared/ui/Avatar';
+import { ChevronLeftIcon, CloseIcon } from '@/shared/ui/icons';
 import { chatService, toCursor } from '@/features/chat/service/chatService';
 import { MessageList } from '@/features/chat/ui/MessageList';
 import { ChatInput } from '@/features/chat/ui/ChatInput';
@@ -266,8 +268,8 @@ export default function ChatPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">
+          <div className="w-10 h-10 border-2 border-line-strong border-t-accent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-ink-muted">
             {isLeaving ? '채팅방에서 나가는 중...' : '채팅을 불러오는 중...'}
           </p>
         </div>
@@ -279,8 +281,13 @@ export default function ChatPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || '채팅방을 찾을 수 없습니다'}</p>
-          <Link href="/rooms" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+          <p className="text-sm text-danger mb-4">
+            {error || '채팅방을 찾을 수 없습니다'}
+          </p>
+          <Link
+            href="/rooms"
+            className="inline-block px-4 py-2 text-sm font-medium bg-accent text-accent-fg rounded-xl hover:bg-accent-hover transition"
+          >
             채팅 목록으로
           </Link>
         </div>
@@ -289,47 +296,45 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-surface">
       {/* 모바일에서는 앱 헤더가 숨겨지므로 이 헤더가 상단 안전영역까지 책임진다 */}
-      <div className="border-b border-gray-200 bg-white px-4 py-3 flex items-center justify-between pt-safe md:pt-3 shrink-0">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="border-b border-line bg-surface px-3 md:px-4 py-2.5 flex items-center justify-between gap-2 pt-safe md:pt-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
           {/* 모바일: 뒤로가기 / 데스크톱: 목록이 옆에 있으므로 불필요 */}
           <Link
             href="/rooms"
             aria-label="채팅 목록으로"
-            className="md:hidden -ml-2 p-2 text-gray-600 text-xl leading-none"
+            className="md:hidden -ml-1 p-1.5 rounded-lg text-ink-muted hover:bg-surface-2 transition"
           >
-            ←
+            <ChevronLeftIcon />
           </Link>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm shrink-0">
-            {room.roomName ? room.roomName.charAt(0).toUpperCase() : 'C'}
-          </div>
+          <Avatar nickname={room.roomName || 'Chat'} size="sm" />
           <div className="min-w-0">
-            <h2 className="font-semibold text-gray-800 truncate">
+            <h2 className="font-semibold truncate leading-tight">
               {room.roomName || '1:1 채팅'}
             </h2>
-            <p className="text-xs text-gray-500">{room.memberCount}명 참여</p>
+            <p className="text-xs text-ink-subtle">{room.memberCount}명 참여</p>
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={handleLeaveRoom}
-            className="px-3 py-1.5 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 active:bg-red-100 transition"
+            className="px-3 py-1.5 text-sm font-medium text-ink-muted rounded-lg hover:bg-danger-soft hover:text-danger transition"
           >
             나가기
           </button>
           <Link
             href="/rooms"
             aria-label="채팅 닫기"
-            className="hidden md:block px-2 text-gray-500 hover:text-gray-700 transition text-xl"
+            className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg text-ink-subtle hover:bg-surface-2 hover:text-ink transition"
           >
-            ✕
+            <CloseIcon className="w-4 h-4" />
           </Link>
         </div>
       </div>
 
       {notice && (
-        <div className="px-4 py-2 bg-red-50 text-red-600 text-sm border-b border-red-100">
+        <div className="px-4 py-2 bg-danger-soft text-danger text-sm border-b border-danger-line">
           {notice}
         </div>
       )}

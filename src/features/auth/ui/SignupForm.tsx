@@ -56,31 +56,31 @@ export function SignupForm() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+      <div className="bg-surface border border-line rounded-2xl shadow-card p-7 md:p-8 space-y-6">
         <div className="space-y-2 text-center">
           <Image
             src="/icons/icon-512.png"
             alt=""
             width={512}
             height={512}
-            className="mx-auto w-[72px] h-[72px] rounded-[22%]"
+            className="mx-auto w-16 h-16 rounded-[26%]"
             priority
           />
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-semibold tracking-tight">
             DariChat
           </h1>
-          <p className="text-gray-600 text-sm">계정을 만들고 대화를 시작하세요</p>
+          <p className="text-sm text-ink-muted">계정을 만들고 대화를 시작하세요</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-danger-soft border border-danger-line text-danger px-4 py-3 rounded-xl text-sm">
               {error}
             </div>
           )}
 
           <div className="space-y-2">
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="name" className="block text-sm font-medium">
               이름
             </label>
             <input
@@ -92,12 +92,12 @@ export function SignupForm() {
               placeholder="홍길동"
               required
               maxLength={100}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              className="w-full h-11 px-4 bg-surface-2 rounded-xl text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition"
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-sm font-medium">
               이메일
             </label>
             <input
@@ -109,12 +109,12 @@ export function SignupForm() {
               placeholder="your@email.com"
               required
               maxLength={100}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              className="w-full h-11 px-4 bg-surface-2 rounded-xl text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition"
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="nickname" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="nickname" className="block text-sm font-medium">
               닉네임
             </label>
             <input
@@ -126,14 +126,14 @@ export function SignupForm() {
               placeholder="사용할 닉네임"
               required
               maxLength={20}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              className="w-full h-11 px-4 bg-surface-2 rounded-xl text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition"
             />
           </div>
 
           <div className="space-y-2">
             <label
               htmlFor="preferredLanguage"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium"
             >
               사용 언어
             </label>
@@ -144,13 +144,13 @@ export function SignupForm() {
                 setFormData((prev) => ({ ...prev, preferredLanguage }))
               }
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-ink-subtle">
               다른 언어로 온 메시지를 이 언어로 번역해서 보여드려요
             </p>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-sm font-medium">
               비밀번호
             </label>
             <input
@@ -162,12 +162,12 @@ export function SignupForm() {
               placeholder="••••••••"
               required
               minLength={8}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              className="w-full h-11 px-4 bg-surface-2 rounded-xl text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition"
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium">
               비밀번호 확인
             </label>
             <input
@@ -179,14 +179,14 @@ export function SignupForm() {
               placeholder="••••••••"
               required
               minLength={8}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              className="w-full h-11 px-4 bg-surface-2 rounded-xl text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition"
             />
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-11 bg-accent text-accent-fg text-sm font-semibold rounded-xl hover:bg-accent-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? '가입 중...' : '회원가입'}
           </button>
@@ -194,16 +194,16 @@ export function SignupForm() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
+            <div className="w-full border-t border-line"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">이미 계정이 있으신가요?</span>
+            <span className="px-2 bg-surface text-ink-subtle">이미 계정이 있으신가요?</span>
           </div>
         </div>
 
         <Link
           href="/auth/login"
-          className="block w-full py-3 border-2 border-indigo-600 text-indigo-600 font-semibold text-center rounded-lg hover:bg-indigo-50 transition"
+          className="flex items-center justify-center w-full h-11 border border-line text-sm font-semibold rounded-xl hover:bg-surface-2 transition"
         >
           로그인
         </Link>

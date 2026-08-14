@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { PreferredLanguage } from '@/shared/types/api.types';
 import { Header } from '@/shared/ui/Header';
 import { Sidebar } from '@/shared/ui/Sidebar';
 import { BottomTabBar } from '@/shared/ui/BottomTabBar';
 import { RoomList } from '@/features/rooms/ui/RoomList';
+import { useFriendsStore } from '@/features/friends/model/friendsStore';
 import { userService } from '@/features/users/service/userService';
+import { TutorialOverlay } from '@/features/tutorial/ui/TutorialOverlay';
 import { useServerEvents } from './useServerEvents';
 
 export default function ProtectedLayout({
@@ -16,8 +19,13 @@ export default function ProtectedLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [userNickname, setUserNickname] = useState('사용자');
+  const [nickname, setNickname] = useState('사용자');
+  const [language, setLanguage] = useState<PreferredLanguage>(
+    PreferredLanguage.KO
+  );
   const [isLoading, setIsLoading] = useState(true);
+
+  const fetchFriends = useFriendsStore((state) => state.fetchAll);
 
   const isRoomsRoute = pathname === '/rooms';
   const isChatRoom = pathname.startsWith('/chat/');
@@ -37,7 +45,8 @@ export default function ProtectedLayout({
     const fetchUserProfile = async () => {
       try {
         const user = await userService.getProfile();
-        setUserNickname(user.nickname);
+        setNickname(user.nickname);
+        setLanguage(user.preferredLanguage);
       } catch (error) {
         console.error('사용자 프로필을 불러오지 못했습니다:', error);
       } finally {
@@ -48,12 +57,21 @@ export default function ProtectedLayout({
     fetchUserProfile();
   }, [router]);
 
+  /*
+   * 받은 친구 요청 수는 친구 화면뿐 아니라 레일·탭바의 배지에도 쓰인다.
+   * 어느 화면으로 들어오든 한 번은 받아둬야 배지가 비어 보이지 않는다.
+   * (이후 변화는 /user/queue/friends 푸시가 채운다)
+   */
+  useEffect(() => {
+    fetchFriends();
+  }, [fetchFriends]);
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-dvh bg-white">
+      <div className="flex items-center justify-center h-dvh bg-bg">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">불러오는 중...</p>
+          <div className="w-10 h-10 border-2 border-line-strong border-t-accent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm text-ink-muted">불러오는 중...</p>
         </div>
       </div>
     );
@@ -67,25 +85,25 @@ export default function ProtectedLayout({
    *   - 데스크톱 채팅 영역 : 목록 패널 + 대화창 2단
    */
   const listPanelClass = isRoomsRoute
-    ? 'flex w-full md:w-80'
+    ? 'flex w-full md:w-[320px]'
     : isChatRoom
-      ? 'hidden md:flex md:w-80'
+      ? 'hidden md:flex md:w-[320px]'
       : 'hidden';
 
   return (
-    <div className="flex flex-col h-dvh bg-gray-50">
-      {/* 대화방에서는 방 자체 헤더를 쓰므로 모바일에서 앱 헤더를 감춘다 */}
-      <div className={isChatRoom ? 'hidden md:block' : 'block'}>
-        <Header userNickname={userNickname} />
-      </div>
+    <div className="flex flex-col h-dvh bg-bg">
+      {/* 대화방에서는 방 자체 헤더를 쓰므로 모바일 앱 헤더를 감춘다 */}
+      {!isChatRoom && <Header />}
 
       <div className="flex flex-1 min-h-0">
-        <Sidebar />
+        <Sidebar nickname={nickname} language={language} />
 
         <aside
-          className={`${listPanelClass} flex-col bg-white border-r border-gray-200 shrink-0 min-h-0`}
+          data-tour="room-list"
+          className={`${listPanelClass} flex-col bg-surface border-r border-line shrink-0 min-h-0`}
         >
-          <RoomList />
+          {/* 목록은 채팅 영역에서만 보이므로 그 밖에서는 아예 그리지 않는다 */}
+          {isChatArea && <RoomList />}
         </aside>
 
         <main
@@ -97,6 +115,8 @@ export default function ProtectedLayout({
 
       {/* 대화방에서는 입력창에 집중할 수 있도록 탭바를 감춘다 */}
       {!isChatRoom && <BottomTabBar />}
+
+      <TutorialOverlay />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   RoomSummaryResponse,
 } from '@/shared/types/api.types';
 import { toErrorMessage } from '@/shared/api/client';
+import { isRemoteDataFrozen } from '@/shared/lib/remoteData';
 import { roomService } from '../service/roomService';
 
 /**
@@ -59,6 +60,11 @@ export const useRoomsStore = create<RoomsState>((set, get) => ({
   ...initialState,
 
   async fetchRooms({ force = false } = {}) {
+    // 튜토리얼이 예시 목록을 띄워둔 동안에는 실제 목록으로 덮지 않는다
+    if (isRemoteDataFrozen()) {
+      return;
+    }
+
     if (get().hasLoaded && !force) {
       return;
     }

@@ -46,23 +46,26 @@ export function FriendRequestList({
 
   if (requests.length === 0) {
     return (
-      <p className="text-center text-gray-500 py-12">받은 친구 요청이 없어요</p>
+      <div className="text-center py-14 px-6">
+        <p className="font-medium">받은 친구 요청이 없어요</p>
+        <p className="text-sm text-ink-muted mt-1">
+          누군가 요청을 보내면 여기에 바로 표시됩니다.
+        </p>
+      </div>
     );
   }
 
   return (
-    <ul className="space-y-1">
+    <ul className="space-y-0.5">
       {requests.map((request) => (
         <li
           key={request.friendshipId}
-          className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition"
+          className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-2 transition"
         >
           <FriendAvatar nickname={request.requesterNickname} size="sm" />
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-800 truncate">
-              {request.requesterNickname}
-            </p>
-            <p className="text-xs text-gray-400">
+            <p className="font-medium truncate">{request.requesterNickname}</p>
+            <p className="text-xs text-ink-subtle">
               {formatReceivedAt(request.createdAt)}
             </p>
           </div>
@@ -77,7 +80,7 @@ export function FriendRequestList({
                   '요청을 수락하지 못했습니다'
                 )
               }
-              className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+              className="px-3 py-1.5 text-sm font-semibold bg-accent text-accent-fg rounded-lg hover:bg-accent-hover transition disabled:opacity-50"
             >
               수락
             </button>
@@ -91,7 +94,7 @@ export function FriendRequestList({
                   '요청을 거절하지 못했습니다'
                 )
               }
-              className="px-3 py-1.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+              className="px-3 py-1.5 text-sm font-medium text-ink-muted rounded-lg hover:bg-surface-3 transition disabled:opacity-50"
             >
               거절
             </button>

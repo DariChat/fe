@@ -104,7 +104,13 @@ describe('useFriendsStore (mock 모드)', () => {
     const acceptedEvent: FriendEvent = {
       type: FriendEventType.REQUEST_ACCEPTED,
       request: null,
-      friend: { userId: 24, nickname: '수아', profileImageUrl: null },
+      // 수락 푸시에는 관계 id 가 담기지 않는다 (목록 조회에만 있다)
+      friend: {
+        friendshipId: null,
+        userId: 24,
+        nickname: '수아',
+        profileImageUrl: null,
+      },
     };
 
     it('요청이 도착하면 받은 요청 맨 앞에 꽂힌다', async () => {
@@ -139,6 +145,65 @@ describe('useFriendsStore (mock 모드)', () => {
       const { friends, sentRequests } = useFriendsStore.getState();
       expect(friends.some((friend) => friend.userId === 24)).toBe(true);
       expect(sentRequests.some((sent) => sent.userId === 24)).toBe(false);
+    });
+  });
+
+  describe('친구 삭제', () => {
+    it('삭제하면 친구 목록에서 빠진다', async () => {
+      await useFriendsStore.getState().fetchAll();
+      const target = useFriendsStore.getState().friends[0];
+
+      await useFriendsStore.getState().removeFriend(target.userId);
+
+      expect(
+        useFriendsStore
+          .getState()
+          .friends.some((friend) => friend.userId === target.userId)
+      ).toBe(false);
+    });
+
+    it('관계 id 를 모르는 친구(수락 푸시로 들어온 경우)도 목록을 다시 받아 삭제한다', async () => {
+      await useFriendsStore.getState().fetchAll();
+      const target = useFriendsStore.getState().friends[0];
+
+      // 푸시로 들어온 친구처럼 friendshipId 를 비워 둔다
+      useFriendsStore.setState({
+        friends: [{ ...target, friendshipId: null }],
+      });
+
+      await useFriendsStore.getState().removeFriend(target.userId);
+
+      expect(
+        useFriendsStore
+          .getState()
+          .friends.some((friend) => friend.userId === target.userId)
+      ).toBe(false);
+    });
+
+    it('목록에 없는 상대를 삭제하려 하면 아무 일도 하지 않는다', async () => {
+      await expect(
+        useFriendsStore.getState().removeFriend(999)
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('상호 요청 자동 수락', () => {
+    it('상대가 이미 보낸 요청이 있으면 보낸 요청이 아니라 친구가 된다', async () => {
+      await useFriendsStore.getState().fetchAll();
+      const incoming = useFriendsStore.getState().requests[0];
+
+      await useFriendsStore.getState().sendRequest(incoming.requesterId);
+
+      const { friends, requests, sentRequests } = useFriendsStore.getState();
+      expect(
+        friends.some((friend) => friend.userId === incoming.requesterId)
+      ).toBe(true);
+      expect(
+        requests.some((r) => r.friendshipId === incoming.friendshipId)
+      ).toBe(false);
+      expect(
+        sentRequests.some((sent) => sent.userId === incoming.requesterId)
+      ).toBe(false);
     });
   });
 });

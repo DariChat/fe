@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { SendIcon } from '@/shared/ui/icons';
 
 interface ChatInputProps {
   onSendMessage: (content: string) => Promise<void>;
@@ -33,41 +34,38 @@ export function ChatInput({
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t border-gray-200 bg-white p-3 md:p-4 pb-safe-2 md:pb-4 shrink-0"
+      className="border-t border-line bg-surface p-3 md:p-4 pb-safe-2 md:pb-4 shrink-0"
     >
-      <div className="flex gap-2 md:gap-3">
+      <div className="flex items-end gap-2">
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="메시지를 입력하세요..."
+          placeholder="메시지를 입력하세요"
           disabled={isSending || isLoading}
           maxLength={500}
-          className="flex-1 min-w-0 px-4 py-3 text-base border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition disabled:bg-gray-50"
+          className="flex-1 min-w-0 h-11 px-4 text-base bg-surface-2 rounded-full placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={!message.trim() || isSending || isLoading}
           aria-label="전송"
-          className="shrink-0 px-4 md:px-6 py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white rounded-full font-semibold hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="shrink-0 w-11 h-11 flex items-center justify-center bg-accent text-accent-fg rounded-full hover:bg-accent-hover active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
         >
           {isSending ? (
-            <>
-              <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              {/* 좁은 화면에서는 아이콘만 남겨 입력창 폭을 확보한다 */}
-              <span className="hidden md:inline">전송 중</span>
-            </>
+            <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
           ) : (
-            <>
-              <span className="hidden md:inline">전송</span>
-              <span>➤</span>
-            </>
+            <SendIcon />
           )}
         </button>
       </div>
-      <p className="hidden md:block text-xs text-gray-400 mt-2">
-        {message.length}/500자
-      </p>
+
+      {/* 글자 수는 한도가 가까워질 때만 알려준다 — 늘 떠 있으면 시선만 뺏는다 */}
+      {message.length > 400 && (
+        <p className="text-xs text-ink-subtle mt-2 text-right">
+          {message.length}/500
+        </p>
+      )}
     </form>
   );
 }

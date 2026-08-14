@@ -6,6 +6,7 @@ import { RoomType } from '@/shared/types/api.types';
 import { toErrorMessage } from '@/shared/api/client';
 import { useFriendsStore } from '@/features/friends/model/friendsStore';
 import { FriendAvatar } from '@/features/friends/ui/FriendAvatar';
+import { CloseIcon } from '@/shared/ui/icons';
 import { useRoomsStore } from '../model/roomsStore';
 
 interface CreateRoomModalProps {
@@ -114,7 +115,7 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
   const friendPicker = () => {
     if (isLoadingFriends || (!hasLoadedFriends && !friendsError)) {
       return (
-        <p className="text-center text-sm text-gray-500 py-8">
+        <p className="text-center text-sm text-ink-muted py-8">
           친구 목록을 불러오는 중...
         </p>
       );
@@ -123,11 +124,11 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
     if (friendsError) {
       return (
         <div className="text-center py-8">
-          <p className="text-sm text-red-600 mb-3">{friendsError}</p>
+          <p className="text-sm text-danger mb-3">{friendsError}</p>
           <button
             type="button"
             onClick={() => fetchFriends({ force: true })}
-            className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            className="px-3 py-1.5 text-sm font-medium bg-accent text-accent-fg rounded-lg hover:bg-accent-hover transition"
           >
             다시 시도
           </button>
@@ -138,11 +139,11 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
     if (friends.length === 0) {
       return (
         <div className="text-center py-8">
-          <p className="text-sm text-gray-600 mb-3">아직 친구가 없어요</p>
+          <p className="text-sm text-ink-muted mb-3">아직 친구가 없어요</p>
           <Link
             href="/friends"
             onClick={onClose}
-            className="inline-block px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            className="inline-block px-3 py-1.5 text-sm font-medium bg-accent text-accent-fg rounded-lg hover:bg-accent-hover transition"
           >
             친구 찾으러 가기
           </Link>
@@ -152,7 +153,7 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
 
     if (visibleFriends.length === 0) {
       return (
-        <p className="text-center text-sm text-gray-500 py-8">
+        <p className="text-center text-sm text-ink-muted py-8">
           검색 결과가 없어요
         </p>
       );
@@ -170,13 +171,13 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
                 onClick={() => toggleFriend(friend.userId)}
                 aria-pressed={isSelected}
                 className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition ${
-                  isSelected ? 'bg-indigo-50' : 'hover:bg-gray-50'
+                  isSelected ? 'bg-accent-soft' : 'hover:bg-surface-2'
                 }`}
               >
                 <FriendAvatar nickname={friend.nickname} size="sm" />
                 <span
                   className={`flex-1 min-w-0 font-medium truncate ${
-                    isSelected ? 'text-indigo-600' : 'text-gray-800'
+                    isSelected ? 'text-accent-ink' : ''
                   }`}
                 >
                   {friend.nickname}
@@ -185,8 +186,8 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
                   aria-hidden
                   className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs shrink-0 ${
                     isSelected
-                      ? 'bg-indigo-600 border-indigo-600 text-white'
-                      : 'border-gray-300 text-transparent'
+                      ? 'bg-accent border-accent text-accent-fg'
+                      : 'border-line-strong text-transparent'
                   }`}
                 >
                   ✓
@@ -201,25 +202,25 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/40 p-0 md:p-4"
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-overlay p-0 md:p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="새 채팅방 만들기"
-        className="w-full md:max-w-md bg-white rounded-t-2xl md:rounded-2xl shadow-xl p-6 pb-safe md:pb-6"
+        className="w-full md:max-w-md bg-surface border border-line rounded-t-2xl md:rounded-2xl shadow-pop p-6 pb-safe md:pb-6 animate-pop-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-800">새 채팅방</h2>
+          <h2 className="text-lg font-semibold tracking-tight">새 채팅방</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-subtle hover:bg-surface-2 hover:text-ink transition"
           >
-            ✕
+            <CloseIcon className="w-4 h-4" />
           </button>
         </div>
 
@@ -236,8 +237,8 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
                 aria-pressed={roomType === type}
                 className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition ${
                   roomType === type
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-accent text-accent-fg'
+                    : 'bg-surface-2 text-ink-muted hover:bg-surface-3'
                 }`}
               >
                 {label}
@@ -250,7 +251,7 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
             <div>
               <label
                 htmlFor="roomName"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium mb-2"
               >
                 방 이름
               </label>
@@ -260,18 +261,18 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="예: 프로젝트 팀"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full h-11 px-4 bg-surface-2 rounded-xl text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition"
               />
             </div>
           )}
 
           <div>
             <div className="flex items-baseline justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium">
                 {isDirect ? '대화할 친구' : '초대할 친구'}
               </span>
               {!isDirect && selectedIds.length > 0 && (
-                <span className="text-xs text-indigo-600 font-medium">
+                <span className="text-xs text-accent-ink font-medium">
                   {selectedIds.length}명 선택됨
                 </span>
               )}
@@ -284,7 +285,7 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
                 onChange={(e) => setKeyword(e.target.value)}
                 aria-label="친구 검색"
                 placeholder="닉네임으로 찾기"
-                className="w-full px-4 py-2.5 mb-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                className="w-full h-10 px-4 mb-2 bg-surface-2 rounded-xl text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition"
               />
             )}
 
@@ -292,7 +293,7 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
           </div>
 
           {error && (
-            <p className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <p className="p-3 bg-danger-soft border border-danger-line text-danger rounded-xl text-sm">
               {error}
             </p>
           )}
@@ -300,7 +301,7 @@ export function CreateRoomModal({ onClose, onCreated }: CreateRoomModalProps) {
           <button
             type="submit"
             disabled={isLoading || friends.length === 0}
-            className="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-11 bg-accent text-accent-fg text-sm font-semibold rounded-xl hover:bg-accent-hover transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? '만드는 중...' : '채팅방 만들기'}
           </button>

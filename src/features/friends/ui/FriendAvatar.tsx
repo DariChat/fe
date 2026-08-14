@@ -1,7 +1,8 @@
+import { Avatar } from '@/shared/ui/Avatar';
+
 /**
- * 닉네임 첫 글자를 쓰는 원형 아바타.
- * profileImageUrl 은 임의의 외부 주소라 next/image 의 허용 도메인 설정이 필요해
- * 채팅방/메시지와 같은 방식(이니셜)으로 통일해 둔다.
+ * 친구·요청·검색 목록에서 쓰는 아바타.
+ * 실제 구현은 공용 Avatar 하나로 모았고, 여기서는 목록에 맞는 크기 이름만 남겨 둔다.
  */
 export function FriendAvatar({
   nickname,
@@ -10,14 +11,5 @@ export function FriendAvatar({
   nickname: string;
   size?: 'sm' | 'md';
 }) {
-  const sizeClass = size === 'sm' ? 'w-10 h-10 text-sm' : 'w-12 h-12';
-
-  return (
-    <div
-      aria-hidden
-      className={`${sizeClass} rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 flex items-center justify-center text-white font-semibold shrink-0`}
-    >
-      {nickname.charAt(0).toUpperCase()}
-    </div>
-  );
+  return <Avatar nickname={nickname} size={size} />;
 }

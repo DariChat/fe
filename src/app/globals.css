@@ -2,6 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * 색은 전부 여기 토큰으로만 정의한다.
+ * 화면 코드에서는 bg-surface / text-ink 처럼 역할 이름만 쓰고,
+ * 라이트·다크 차이는 이 파일에서만 갈린다 (.dark 는 html 에 붙는다).
+ */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f3f7;
+  --surface-3: #e8ebf1;
+  --line: #e6e8ee;
+  --line-strong: #d2d7e0;
+
+  --ink: #101828;
+  --ink-muted: #5a6474;
+  --ink-subtle: #8b94a3;
+
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #eef1ff;
+  --accent-ink: #4338ca;
+  --on-accent: #ffffff;
+
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --danger-line: #fecaca;
+  --success: #059669;
+
+  /* 상대방 말풍선 — 내 말풍선은 accent 를 쓴다 */
+  --bubble-in: #f1f3f7;
+  --bubble-in-ink: #101828;
+
+  --ring: rgba(79, 70, 229, 0.35);
+  --overlay: rgba(12, 16, 26, 0.55);
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05),
+    0 12px 28px -18px rgba(16, 24, 40, 0.28);
+  --shadow-pop: 0 8px 20px -6px rgba(16, 24, 40, 0.16),
+    0 24px 48px -24px rgba(16, 24, 40, 0.32);
+
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0b0d12;
+  --surface: #12151c;
+  --surface-2: #191d26;
+  --surface-3: #222836;
+  --line: #232936;
+  --line-strong: #333b4b;
+
+  --ink: #e9ebf1;
+  --ink-muted: #9aa3b3;
+  --ink-subtle: #6d7686;
+
+  --accent: #6366f1;
+  --accent-hover: #7c7ff5;
+  --accent-soft: #1a1f33;
+  --accent-ink: #b3b9ff;
+  --on-accent: #ffffff;
+
+  --danger: #f26d6d;
+  --danger-soft: #2a1719;
+  --danger-line: #4a2429;
+  --success: #34d399;
+
+  --bubble-in: #1c212c;
+  --bubble-in-ink: #e9ebf1;
+
+  --ring: rgba(99, 102, 241, 0.45);
+  --overlay: rgba(3, 5, 10, 0.7);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35),
+    0 12px 28px -18px rgba(0, 0, 0, 0.8);
+  --shadow-pop: 0 8px 20px -6px rgba(0, 0, 0, 0.5),
+    0 24px 48px -24px rgba(0, 0, 0, 0.9);
+
+  color-scheme: dark;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -15,11 +95,13 @@ html {
 }
 
 body {
-  background-color: #f9fafb;
-  color: #1f2937;
+  background-color: var(--bg);
+  color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
+  /* 라틴·한글·일본어·중국어가 섞여도 숫자 폭이 흔들리지 않게 한다 */
+  font-feature-settings: 'tnum' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100%;
@@ -43,6 +125,12 @@ header {
   user-select: none;
 }
 
+/* 키보드로 이동할 때만 보이는 포커스 링 (마우스 클릭에는 뜨지 않는다) */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* 노치·홈 인디케이터 영역을 피하기 위한 유틸리티 (viewportFit: cover 와 짝) */
 .pt-safe {
   padding-top: env(safe-area-inset-top);
@@ -64,16 +152,16 @@ header {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: var(--line-strong);
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--ink-subtle);
 }
 
 /* 모바일에서는 스크롤바가 콘텐츠 폭을 갉아먹지 않도록 숨긴다 */
@@ -81,5 +169,45 @@ header {
   ::-webkit-scrollbar {
     width: 0;
     height: 0;
+  }
+}
+
+/* 튜토리얼 말풍선·딤 등장 (모션을 줄이기로 한 사용자에게는 걸지 않는다) */
+@keyframes darichat-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes darichat-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: darichat-fade-in 0.2s ease-out both;
+}
+
+.animate-pop-in {
+  animation: darichat-pop-in 0.22s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-pop-in {
+    animation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
   }
 }

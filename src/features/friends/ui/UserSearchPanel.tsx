@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { UserSearchResponse } from '@/shared/types/api.types';
 import { toErrorMessage } from '@/shared/api/client';
 import { toUserCursor, userService } from '@/features/users/service/userService';
+import { SearchIcon } from '@/shared/ui/icons';
 import { useFriendsStore } from '../model/friendsStore';
 import { FriendAvatar } from './FriendAvatar';
 
@@ -104,35 +105,40 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
   return (
     <div className="space-y-4">
       <form onSubmit={handleSearch} className="flex gap-2">
-        <input
-          type="search"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          placeholder="닉네임으로 검색"
-          aria-label="닉네임으로 검색"
-          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-        />
+        <div className="relative flex-1">
+          <SearchIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle" />
+          <input
+            type="search"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="닉네임으로 검색"
+            aria-label="닉네임으로 검색"
+            className="w-full h-11 pl-9 pr-3 bg-surface-2 rounded-xl text-sm placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent transition"
+          />
+        </div>
         <button
           type="submit"
           disabled={isSearching || !keyword.trim()}
-          className="px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+          className="px-4 h-11 bg-accent text-accent-fg text-sm font-semibold rounded-xl hover:bg-accent-hover transition disabled:opacity-50"
         >
           검색
         </button>
       </form>
 
       {hasSearched && results.length === 0 && !isSearching && (
-        <p className="text-center text-gray-500 py-12">검색 결과가 없어요</p>
+        <p className="text-center text-sm text-ink-muted py-12">
+          검색 결과가 없어요
+        </p>
       )}
 
-      <ul className="space-y-1">
+      <ul className="space-y-0.5">
         {results.map((user) => (
           <li
             key={user.id}
-            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition"
+            className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-2 transition"
           >
             <FriendAvatar nickname={user.nickname} size="sm" />
-            <span className="flex-1 min-w-0 font-semibold text-gray-800 truncate">
+            <span className="flex-1 min-w-0 font-medium truncate">
               {user.nickname}
             </span>
             <button
@@ -141,10 +147,10 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
                 isRequested(user) ? handleCancel(user) : handleSend(user)
               }
               disabled={isFriend(user) || sendingId === user.id}
-              className={`px-3 py-1.5 text-sm font-medium border rounded-lg transition disabled:opacity-50 disabled:hover:bg-transparent ${
+              className={`shrink-0 px-3 py-1.5 text-sm font-medium border rounded-lg transition disabled:opacity-50 ${
                 isRequested(user)
-                  ? 'text-gray-600 border-gray-200 hover:bg-gray-50'
-                  : 'text-indigo-600 border-indigo-200 hover:bg-indigo-50'
+                  ? 'text-ink-muted border-line hover:bg-surface-3'
+                  : 'text-accent-ink border-line hover:bg-accent-soft'
               }`}
             >
               {labelFor(user)}
@@ -158,7 +164,7 @@ export function UserSearchPanel({ onError }: UserSearchPanelProps) {
           type="button"
           onClick={handleLoadMore}
           disabled={isSearching}
-          className="w-full py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition disabled:opacity-50"
+          className="w-full py-2 text-sm font-medium text-accent-ink hover:bg-accent-soft rounded-lg transition disabled:opacity-50"
         >
           {isSearching ? '불러오는 중...' : '더 보기'}
         </button>

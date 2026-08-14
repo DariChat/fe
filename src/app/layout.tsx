@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { THEME_INIT_SCRIPT } from '@/shared/lib/theme';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -40,7 +41,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#ffffff',
+  // 주소창 색도 테마를 따라가야 홈 화면에서 실행했을 때 이질감이 없다
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b0d12' },
+  ],
   width: 'device-width',
   initialScale: 1,
   // 입력창 포커스 시 확대되는 것을 막아 네이티브 앱처럼 동작시킨다
@@ -56,8 +61,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
-      <body className="bg-white">{children}</body>
+    <html lang="ko" suppressHydrationWarning>
+      <head>
+        {/*
+          첫 페인트 전에 .dark 를 붙인다.
+          리액트가 붙일 때까지 기다리면 다크 모드 사용자에게 흰 화면이 한 번 번쩍인다.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className="bg-bg text-ink">{children}</body>
     </html>
   );
 }

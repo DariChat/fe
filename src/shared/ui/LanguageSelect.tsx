@@ -26,7 +26,7 @@ export function LanguageSelect({
       value={value}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value as PreferredLanguage)}
-      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition disabled:opacity-50"
+      className="w-full h-11 px-4 bg-surface-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent transition disabled:opacity-50"
     >
       {Object.values(PreferredLanguage).map((language) => (
         <option key={language} value={language}>

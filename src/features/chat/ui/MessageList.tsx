@@ -41,8 +41,8 @@ export function MessageList({
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">메시지를 불러오는 중...</p>
+          <div className="w-10 h-10 border-2 border-line-strong border-t-accent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-ink-muted">메시지를 불러오는 중...</p>
         </div>
       </div>
     );
@@ -51,9 +51,11 @@ export function MessageList({
   if (messages.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <p className="text-gray-500 text-lg">아직 대화가 없어요</p>
-          <p className="text-gray-400 text-sm mt-2">첫 메시지를 보내보세요!</p>
+        <div className="text-center px-6">
+          <p className="font-medium">아직 대화가 없어요</p>
+          <p className="text-sm text-ink-muted mt-1">
+            첫 메시지를 보내보세요. 상대의 언어로 번역돼 전달됩니다.
+          </p>
         </div>
       </div>
     );
@@ -61,13 +63,13 @@ export function MessageList({
 
   return (
     // flex-1 + min-h-0 이라야 부모(h-full flex-col) 안에서 메시지 영역만 스크롤된다
-    <div className="flex flex-col flex-1 min-h-0 p-6 overflow-y-auto">
+    <div className="flex flex-col flex-1 min-h-0 px-4 md:px-6 py-5 overflow-y-auto">
       {hasMore && onLoadMore && (
         <button
           type="button"
           onClick={onLoadMore}
           disabled={isLoadingMore}
-          className="self-center mb-4 px-4 py-1.5 text-sm text-indigo-600 hover:bg-indigo-50 rounded-full transition disabled:opacity-50"
+          className="self-center mb-4 px-4 py-1.5 text-sm font-medium text-ink-muted bg-surface-2 hover:bg-surface-3 rounded-full transition disabled:opacity-50"
         >
           {isLoadingMore ? '불러오는 중...' : '이전 메시지 더 보기'}
         </button>

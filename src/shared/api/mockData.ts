@@ -114,9 +114,9 @@ export const mockRooms: RoomSummaryResponse[] = [
 
 /** GET /api/friends */
 export const mockFriends: FriendResponse[] = [
-  { userId: 11, nickname: '서연', profileImageUrl: null },
-  { userId: 12, nickname: '준호', profileImageUrl: null },
-  { userId: 13, nickname: 'Emily', profileImageUrl: null },
+  { friendshipId: 11001, userId: 11, nickname: '서연', profileImageUrl: null },
+  { friendshipId: 11002, userId: 12, nickname: '준호', profileImageUrl: null },
+  { friendshipId: 11003, userId: 13, nickname: 'Emily', profileImageUrl: null },
 ];
 
 /** GET /api/friends/requests/received */

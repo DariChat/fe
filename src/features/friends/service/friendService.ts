@@ -33,10 +33,33 @@ export const friendService = {
 
   /**
    * 이미 같은 방향의 요청/친구 관계가 있으면 409 가 온다.
-   * (상대가 나에게 보낸 요청이 있어도 서버는 별개 요청으로 만든다)
+   *
+   * 상대가 나에게 보낸 PENDING 요청이 있으면 서버는 새 요청을 만들지 않고
+   * 그 요청을 그 자리에서 수락한다 (200, status=ACCEPTED). 즉 응답의 status 를 보고
+   * "요청 보냄"과 "바로 친구가 됨"을 갈라야 한다 — 호출부는 friendsStore 가 처리한다.
    */
   async sendRequest(addresseeId: number): Promise<FriendRequestResponse> {
     if (USE_MOCK) {
+      // 상대가 이미 나에게 보낸 요청이 있으면 서버처럼 즉시 수락으로 답한다
+      const reverse = mockRequestState.find(
+        (request) => request.requesterId === addresseeId
+      );
+      if (reverse) {
+        mockRequestState = mockRequestState.filter(
+          (request) => request.friendshipId !== reverse.friendshipId
+        );
+        mockFriendState = [
+          ...mockFriendState,
+          {
+            friendshipId: reverse.friendshipId,
+            userId: reverse.requesterId,
+            nickname: reverse.requesterNickname,
+            profileImageUrl: reverse.requesterProfileImageUrl,
+          },
+        ];
+        return { ...reverse, status: FriendshipStatus.ACCEPTED };
+      }
+
       return {
         friendshipId: mockFriendshipId++,
         requesterId: 0,
@@ -67,6 +90,7 @@ export const friendService = {
         mockFriendState = [
           ...mockFriendState,
           {
+            friendshipId: accepted.friendshipId,
             userId: accepted.requesterId,
             nickname: accepted.requesterNickname,
             profileImageUrl: accepted.requesterProfileImageUrl,
@@ -86,6 +110,22 @@ export const friendService = {
     if (USE_MOCK) {
       mockRequestState = mockRequestState.filter(
         (request) => request.friendshipId !== friendshipId
+      );
+      return;
+    }
+
+    await apiClient.delete(`/api/friends/requests/${friendshipId}`);
+  },
+
+  /**
+   * 친구 관계 끊기.
+   * 서버는 요청 취소·거절과 같은 엔드포인트로 처리한다 (PENDING 이면 요청 삭제,
+   * ACCEPTED 면 관계 삭제). 호출부에서 의도가 드러나도록 이름만 따로 둔다.
+   */
+  async deleteFriend(friendshipId: number): Promise<void> {
+    if (USE_MOCK) {
+      mockFriendState = mockFriendState.filter(
+        (friend) => friend.friendshipId !== friendshipId
       );
       return;
     }
