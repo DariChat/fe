@@ -8,6 +8,7 @@ import {
   RoomEvent,
 } from '@/shared/types/api.types';
 import { USE_MOCK, WS_URL } from '@/shared/config/env';
+import { readAccessToken } from '@/shared/lib/authToken';
 
 /*
  * 배포 서버(WebSocketConfig) 기준 값.
@@ -76,11 +77,28 @@ export const connectWebSocket = (token: string): Client | null => {
     return client;
   }
 
-  client = new Client({
+  const stomp = new Client({
     brokerURL: WS_URL,
     // StompChannelInterceptor 가 CONNECT 프레임의 Authorization 헤더를 읽는다
     connectHeaders: {
       Authorization: `Bearer ${token}`,
+    },
+    /*
+     * 재연결은 처음 만들 때 넣어둔 connectHeaders 를 그대로 다시 쓴다.
+     * 그런데 accessToken 은 REST 쪽에서 401 을 만나면 /api/auth/reissue 로 갈리므로,
+     * 소켓이 오래 끊겨 있다 붙으면 이미 만료된 토큰으로 CONNECT 를 보내 계속 거절당한다.
+     * 매 접속 시도 직전에 저장소의 최신 토큰을 다시 읽어 헤더를 갈아끼운다.
+     */
+    beforeConnect: () => {
+      const latest = readAccessToken();
+
+      // 로그아웃 등으로 토큰이 사라졌다면 다시 붙어봐야 거절당한다 — 재시도를 멈춘다
+      if (!latest) {
+        void stomp.deactivate();
+        return;
+      }
+
+      stomp.connectHeaders = { Authorization: `Bearer ${latest}` };
     },
     reconnectDelay: 5000,
     heartbeatIncoming: 10000,
@@ -101,8 +119,9 @@ export const connectWebSocket = (token: string): Client | null => {
     },
   });
 
-  client.activate();
-  return client;
+  client = stomp;
+  stomp.activate();
+  return stomp;
 };
 
 export const getWebSocket = (): Client | null => client;

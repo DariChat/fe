@@ -10,10 +10,11 @@ import { USE_MOCK } from '@/shared/config/env';
 import { useRoomsStore } from '@/features/rooms/model/roomsStore';
 import { useFriendsStore } from '@/features/friends/model/friendsStore';
 import { cacheCurrentUser, clearCurrentUser } from '@/shared/lib/currentUser';
+import { clearAccessToken, saveAccessToken } from '@/shared/lib/authToken';
 
 /** refreshToken 은 HttpOnly 쿠키로만 관리된다 (바디에는 null 이 온다) */
 const saveTokens = (data: TokenResponse) => {
-  localStorage.setItem('accessToken', data.accessToken);
+  saveAccessToken(data.accessToken);
 };
 
 export const authService = {
@@ -70,7 +71,7 @@ export const authService = {
       }
     }
 
-    localStorage.removeItem('accessToken');
+    clearAccessToken();
     localStorage.removeItem('refreshToken');
     clearCurrentUser();
 

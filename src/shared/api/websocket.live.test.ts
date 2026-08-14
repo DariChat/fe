@@ -2,10 +2,10 @@
  * mock 브로커가 아니라 실제 STOMP 클라이언트를 쓰는 경로를 검증한다.
  * (@stomp/stompjs 만 가짜로 바꿔 끼우고 websocket.ts 는 그대로 돌린다)
  *
- * 여기서 잡고 싶은 건 하나다 — 연결 콜백을 거는 쪽이 둘 이상이어도
- * 나중에 등록한 쪽이 앞의 것을 지우지 않아야 한다.
- * 레이아웃은 개인 큐를, 대화방은 방 토픽을 각각 이 시점에 구독하기 때문에
- * 한쪽이 지워지면 그 화면만 조용히 죽는다.
+ * 여기서 잡고 싶은 건 둘이다.
+ *  - 연결 콜백을 거는 쪽이 둘 이상이어도 나중에 등록한 쪽이 앞의 것을 지우지 않을 것
+ *    (레이아웃은 개인 큐를, 대화방은 방 토픽을 이 시점에 구독한다 — 지워지면 조용히 죽는다)
+ *  - 재연결할 때 낡은 토큰을 다시 쓰지 않을 것 (재발급된 토큰을 읽어와야 한다)
  */
 
 jest.mock('@/shared/config/env', () => ({
@@ -14,20 +14,27 @@ jest.mock('@/shared/config/env', () => ({
 }));
 
 interface FakeConfig {
+  connectHeaders?: Record<string, string>;
   onConnect?: () => void;
+  beforeConnect?: () => void;
 }
 
 const subscribe = jest.fn(() => ({ id: 'sub', unsubscribe: jest.fn() }));
+const deactivate = jest.fn();
 let lastConfig: FakeConfig = {};
+let lastClient: { connectHeaders?: Record<string, string> } | null = null;
 
 jest.mock('@stomp/stompjs', () => ({
   Client: class {
     connected = false;
+    connectHeaders?: Record<string, string>;
     constructor(config: FakeConfig) {
       lastConfig = config;
+      this.connectHeaders = config.connectHeaders;
+      lastClient = this;
     }
     activate() {}
-    deactivate() {}
+    deactivate = deactivate;
     subscribe = subscribe;
   },
 }));
@@ -42,7 +49,10 @@ describe('websocket (실제 STOMP 클라이언트)', () => {
   beforeEach(() => {
     disconnectWebSocket();
     subscribe.mockClear();
+    deactivate.mockClear();
     lastConfig = {};
+    lastClient = null;
+    localStorage.setItem('accessToken', 'token');
     connectWebSocket('token');
   });
 
@@ -88,5 +98,29 @@ describe('websocket (실제 STOMP 클라이언트)', () => {
 
     expect(onGone).not.toHaveBeenCalled();
     expect(onAlive).toHaveBeenCalledTimes(1);
+  });
+
+  describe('재연결 시 토큰', () => {
+    it('접속 직전에 저장소의 최신 토큰을 다시 읽는다', () => {
+      expect(lastClient?.connectHeaders).toEqual({
+        Authorization: 'Bearer token',
+      });
+
+      // 소켓이 끊겨 있는 동안 REST 쪽에서 재발급된 상황
+      localStorage.setItem('accessToken', 'reissued-token');
+      lastConfig.beforeConnect?.();
+
+      expect(lastClient?.connectHeaders).toEqual({
+        Authorization: 'Bearer reissued-token',
+      });
+    });
+
+    it('토큰이 사라졌으면 재접속을 멈춘다', () => {
+      localStorage.removeItem('accessToken');
+
+      lastConfig.beforeConnect?.();
+
+      expect(deactivate).toHaveBeenCalled();
+    });
   });
 });

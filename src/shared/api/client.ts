@@ -2,6 +2,11 @@ import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import { API_BASE_URL } from '@/shared/config/env';
 import { ApiResponse, ErrorResponse } from '@/shared/types/api.types';
 import { clearCurrentUser } from '@/shared/lib/currentUser';
+import {
+  clearAccessToken,
+  readAccessToken,
+  saveAccessToken,
+} from '@/shared/lib/authToken';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -18,9 +23,6 @@ const AUTH_ENDPOINTS = [
   '/api/auth/reissue',
 ];
 
-const getAccessToken = (): string | null =>
-  typeof window === 'undefined' ? null : localStorage.getItem('accessToken');
-
 /** { success, data } 래퍼를 벗겨 data 만 돌려준다 */
 export const unwrap = <T>(response: AxiosResponse<ApiResponse<T>>): T =>
   response.data.data;
@@ -36,7 +38,7 @@ export const isNotFound = (error: unknown): boolean =>
   (error as AxiosError)?.response?.status === 404;
 
 apiClient.interceptors.request.use((config) => {
-  const token = getAccessToken();
+  const token = readAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -71,13 +73,13 @@ apiClient.interceptors.response.use(
       );
 
       const { accessToken } = response.data.data;
-      localStorage.setItem('accessToken', accessToken);
+      saveAccessToken(accessToken);
 
       apiClient.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       originalRequest.headers.Authorization = `Bearer ${accessToken}`;
       return apiClient(originalRequest);
     } catch (refreshError) {
-      localStorage.removeItem('accessToken');
+      clearAccessToken();
       clearCurrentUser();
       window.location.href = '/auth/login';
       return Promise.reject(refreshError);
