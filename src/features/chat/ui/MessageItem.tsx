@@ -61,8 +61,13 @@ export function MessageItem({
               {message.senderNickname}
             </p>
           )}
+          {/*
+            w-fit 이 없으면 말풍선이 열 너비(= 시각·"번역됨 ·" 같은 아래 줄 중 가장 긴 것)까지
+            늘어나서 두 글자 메시지에도 빈 공간이 크게 남는다.
+            내 메시지는 열 안에서 오른쪽 끝에 붙여야 꼬리 위치가 맞는다.
+          */}
           <div
-            className={`px-3.5 py-2 break-words ${
+            className={`px-3.5 py-2 break-words w-fit max-w-full ${isOwn ? 'ml-auto' : ''} ${
               isOwn
                 ? 'bg-accent text-accent-fg rounded-2xl rounded-br-md'
                 : 'bg-bubble-in text-bubble-in-ink rounded-2xl rounded-bl-md'
