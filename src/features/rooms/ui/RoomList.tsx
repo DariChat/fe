@@ -4,25 +4,14 @@ import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAutoRefresh } from '@/shared/lib/useAutoRefresh';
+import { formatTimeOrDate } from '@/shared/lib/datetime';
 import { Avatar } from '@/shared/ui/Avatar';
 import { PlusIcon, SearchIcon } from '@/shared/ui/icons';
 import { useRoomsStore } from '../model/roomsStore';
 import { CreateRoomModal } from './CreateRoomModal';
 
-const formatLastMessageAt = (timestamp: string | null) => {
-  if (!timestamp) return '';
-
-  const date = new Date(timestamp);
-  const isToday = date.toDateString() === new Date().toDateString();
-
-  return isToday
-    ? date.toLocaleTimeString('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      })
-    : date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
-};
+const formatLastMessageAt = (timestamp: string | null) =>
+  timestamp ? formatTimeOrDate(timestamp) : '';
 
 export function RoomList() {
   const pathname = usePathname();

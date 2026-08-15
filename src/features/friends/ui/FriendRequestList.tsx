@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FriendRequestResponse } from '@/shared/types/api.types';
 import { toErrorMessage } from '@/shared/api/client';
 import { useFriendsStore } from '../model/friendsStore';
+import { formatTimeOrDate } from '@/shared/lib/datetime';
 import { FriendAvatar } from './FriendAvatar';
 
 interface FriendRequestListProps {
@@ -11,18 +12,7 @@ interface FriendRequestListProps {
   onError: (message: string) => void;
 }
 
-const formatReceivedAt = (timestamp: string) => {
-  const date = new Date(timestamp);
-  const isToday = date.toDateString() === new Date().toDateString();
-
-  return isToday
-    ? date.toLocaleTimeString('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      })
-    : date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
-};
+const formatReceivedAt = formatTimeOrDate;
 
 export function FriendRequestList({
   requests,

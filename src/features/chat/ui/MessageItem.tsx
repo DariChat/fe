@@ -7,6 +7,7 @@ import {
   PublishStatus,
 } from '@/shared/types/api.types';
 import { Avatar } from '@/shared/ui/Avatar';
+import { formatTime } from '@/shared/lib/datetime';
 
 interface MessageItemProps {
   message: MessageResponse;
@@ -23,14 +24,6 @@ export function MessageItem({
   onRetry,
 }: MessageItemProps) {
   const [showOriginal, setShowOriginal] = useState(false);
-
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
 
   /*
    * 서버는 발행 직후 markPublished 를 하므로 브로드캐스트 시점의 publishStatus 는 PENDING 이다.
