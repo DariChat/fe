@@ -46,4 +46,5 @@ Thumbs.db
 
 # 개인 작업 메모 (커밋 안 함)
 WORK_NOTES.md
+docs/
 .vercel
